@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StudyMate — Session 03 · Blueprint</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&display=swap"
+  rel="stylesheet"
+/>
+<link
+  rel="stylesheet"
+  as="style"
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+/>
+
+<style>
+  :root {
+    --bg: #0a0d13;
+    --bg-deep: #060810;
+    --panel: #11151f;
+    --panel-line: #1c2230;
+
+    --text: #e6e8ec;
+    --text-mid: #8a91a0;
+    --text-soft: #545b6b;
+
+    --cyan: #6bd7e1;
+    --cyan-deep: #2a8a93;
+    --amber: #e8ae5c;
+    --magenta: #d96f9a;
+    --red: #ee6a6a;
+
+    --grid: rgba(107, 215, 225, 0.07);
+    --grid-bright: rgba(107, 215, 225, 0.18);
+
+    --display: "Fraunces", "Times New Roman", Cambria, serif;
+    --hangul: "Pretendard Variable", "Pretendard", -apple-system,
+      BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--hangul);
+    font-weight: 400;
+    font-size: 15.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+
+    /* blueprint grid */
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      radial-gradient(ellipse at top, rgba(107, 215, 225, 0.04), transparent 65%);
+    background-size: 36px 36px, 36px 36px, 100% 100%;
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  ::selection { background: var(--cyan); color: var(--bg-deep); }
+
+  /* ─────────────────────────── shell ── */
+  .frame {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 40px 80px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 56px;
+  }
+
+  @media (max-width: 960px) {
+    .frame { grid-template-columns: 1fr; gap: 32px; padding: 24px 22px 60px; }
+  }
+
+  /* ─────────────────────────── sidebar ── */
+  .rail {
+    position: sticky;
+    top: 28px;
+    align-self: start;
+    border: 1px solid var(--panel-line);
+    background: linear-gradient(180deg, var(--panel), rgba(17, 21, 31, 0.45));
+    padding: 22px 18px;
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    animation: fadeIn 600ms 60ms forwards;
+  }
+
+  .rail-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .rail-mark .glyph {
+    width: 28px; height: 28px;
+    border: 1.5px solid var(--cyan);
+    color: var(--cyan);
+    display: grid; place-items: center;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .rail-mark .name {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .rail-mark .sub {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+
+  .rail h6 {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin: 22px 0 10px;
+    font-weight: 500;
+  }
+
+  .rail-meta {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.9;
+    color: var(--text-mid);
+  }
+  .rail-meta li {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed var(--panel-line);
+    padding: 4px 0;
+  }
+  .rail-meta li:last-child { border-bottom: 0; }
+  .rail-meta strong { font-weight: 500; color: var(--text); }
+  .rail-meta .ok { color: var(--cyan); }
+  .rail-meta .warn { color: var(--amber); }
+
+  .rail-progress {
+    margin-top: 18px;
+  }
+  .rail-progress .track {
+    height: 4px;
+    background: var(--panel-line);
+    position: relative;
+  }
+  .rail-progress .fill {
+    position: absolute;
+    inset: 0;
+    width: 60%;
+    background: linear-gradient(90deg, var(--cyan-deep), var(--cyan));
+    box-shadow: 0 0 12px rgba(107, 215, 225, 0.5);
+  }
+  .rail-progress .label {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-soft);
+    margin-top: 6px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ─────────────────────────── content header ── */
+  .head {
+    border-top: 1px solid var(--panel-line);
+    border-bottom: 1px solid var(--panel-line);
+    padding: 14px 0;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeIn 600ms 140ms forwards;
+  }
+  .head .live::before {
+    content: "●";
+    color: var(--cyan);
+    margin-right: 8px;
+    animation: pulse 1.6s infinite;
+  }
+  .head .center { text-align: center; letter-spacing: 0.36em; }
+
+  /* ─────────────────────────── question ── */
+  .q-wrap {
+    opacity: 0;
+    animation: riseIn 700ms 220ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+    margin-bottom: 48px;
+    position: relative;
+  }
+
+  .q-callout {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 5px 11px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  .q-callout .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  .q-num {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(72px, 10vw, 116px);
+    line-height: 0.92;
+    letter-spacing: -0.025em;
+    margin: 0 0 12px;
+    font-variation-settings: "opsz" 144, "SOFT" 0;
+    color: var(--text);
+  }
+  .q-num .slash {
+    color: var(--text-soft);
+    font-style: italic;
+    margin: 0 8px;
+  }
+  .q-num .total {
+    color: var(--text-soft);
+    font-style: italic;
+    font-weight: 400;
+  }
+  .q-num .arrow {
+    display: inline-block;
+    color: var(--cyan);
+    font-size: 0.42em;
+    vertical-align: middle;
+    margin-left: 22px;
+    transform: translateY(-12px);
+  }
+
+  .q-text {
+    font-size: 22px;
+    line-height: 1.55;
+    font-weight: 500;
+    letter-spacing: -0.013em;
+    max-width: 36ch;
+    color: var(--text);
+    margin: 0 0 12px;
+  }
+  .q-text-en {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 16px;
+    color: var(--text-mid);
+    max-width: 64ch;
+    margin: 0;
+  }
+
+  /* corner crops (architectural detail) */
+  .crop {
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 1px solid var(--cyan);
+  }
+  .crop.tl { top: -8px; left: -8px; border-right: 0; border-bottom: 0; }
+  .crop.tr { top: -8px; right: -8px; border-left: 0; border-bottom: 0; }
+  .crop.bl { bottom: -8px; left: -8px; border-right: 0; border-top: 0; }
+  .crop.br { bottom: -8px; right: -8px; border-left: 0; border-top: 0; }
+
+  /* ─────────────────────────── section divider ── */
+  .div-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    margin: 36px 0 22px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+  }
+  .div-row strong { color: var(--cyan); font-weight: 500; letter-spacing: 0.32em; }
+  .div-row .line { height: 1px; background: linear-gradient(90deg, var(--cyan-deep), transparent); }
+  .div-row .num { color: var(--text-mid); }
+
+  /* ─────────────────────────── learner answer ── */
+  .answer {
+    border: 1px solid var(--panel-line);
+    border-left: 2px solid var(--cyan);
+    background: linear-gradient(180deg, rgba(17, 21, 31, 0.6), rgba(17, 21, 31, 0.2));
+    padding: 22px 26px;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: fadeIn 700ms 460ms forwards;
+    position: relative;
+  }
+  .answer::before {
+    content: "answer.input";
+    position: absolute;
+    top: -10px; left: 22px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+  .answer p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.78;
+    color: var(--text);
+    max-width: 62ch;
+  }
+  .answer-meta {
+    margin-top: 14px;
+    display: flex;
+    gap: 18px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+  }
+  .answer-meta span strong { color: var(--text); font-weight: 500; }
+
+  /* ─────────────────────────── grade block ── */
+  .grade {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fadeIn 700ms 720ms forwards;
+  }
+  @media (max-width: 960px) {
+    .grade { grid-template-columns: 1fr; gap: 18px; }
+  }
+
+  .score-card {
+    border: 1px solid var(--panel-line);
+    background: linear-gradient(160deg, rgba(232, 174, 92, 0.06), rgba(17, 21, 31, 0.4));
+    padding: 24px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .score-card::after {
+    content: "";
+    position: absolute;
+    right: -30px; top: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(232, 174, 92, 0.18), transparent 65%);
+  }
+  .score-card .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 14px;
+  }
+  .score-card .num {
+    font-family: var(--display);
+    font-size: 88px;
+    line-height: 0.85;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.03em;
+    font-variation-settings: "opsz" 144;
+  }
+  .score-card .num .denom {
+    font-size: 22px;
+    font-style: italic;
+    color: var(--text-soft);
+    font-weight: 400;
+    margin-left: 6px;
+  }
+  .score-card .bar {
+    margin-top: 22px;
+    height: 3px;
+    background: var(--panel-line);
+    position: relative;
+  }
+  .score-card .bar .fill {
+    position: absolute; inset: 0;
+    width: 83%;
+    background: var(--amber);
+    box-shadow: 0 0 10px rgba(232, 174, 92, 0.6);
+  }
+  .score-card .legend {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--text-soft);
+    text-transform: uppercase;
+  }
+  .score-card .legend strong { color: var(--text); font-weight: 500; }
+
+  .rubric {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--panel-line);
+  }
+  .rubric li {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    align-items: center;
+    gap: 18px;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--panel-line);
+    transition: padding-left 220ms ease, background 220ms ease;
+  }
+  .rubric li:hover { padding-left: 10px; background: rgba(107, 215, 225, 0.035); }
+  .rubric .ix {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-soft);
+    letter-spacing: 0.18em;
+  }
+  .rubric .lbl {
+    color: var(--text);
+    font-size: 15.5px;
+    letter-spacing: -0.005em;
+  }
+  .rubric .v {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid currentColor;
+  }
+  .rubric .v.ok { color: var(--cyan); }
+  .rubric .v.miss { color: var(--red); }
+  .rubric .v.miss::before { content: "✕ "; }
+  .rubric .v.ok::before { content: "✓ "; }
+
+  /* ─────────────────────────── feedback ── */
+  .fb {
+    margin-top: 20px;
+    padding: 22px 26px;
+    border: 1px dashed var(--magenta);
+    background: linear-gradient(180deg, rgba(217, 111, 154, 0.06), rgba(17, 21, 31, 0.3));
+    position: relative;
+    opacity: 0;
+    animation: fadeIn 700ms 1020ms forwards;
+  }
+  .fb::before {
+    content: "//reinforcement";
+    position: absolute;
+    top: -10px; left: 22px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--magenta);
+  }
+  .fb p {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.75;
+    color: var(--text);
+    max-width: 60ch;
+  }
+  .fb strong {
+    color: var(--amber);
+    font-weight: 500;
+    border-bottom: 1px dashed var(--amber);
+  }
+  .fb .tip {
+    margin-top: 16px;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 15.5px;
+    color: var(--text-mid);
+  }
+  .fb .tip::before { content: "→ "; color: var(--cyan); font-style: normal; }
+
+  /* ─────────────────────────── citation ── */
+  .cite {
+    margin-top: 36px;
+    border-top: 1px solid var(--panel-line);
+    padding-top: 16px;
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 22px;
+    opacity: 0;
+    animation: fadeIn 700ms 1240ms forwards;
+  }
+  .cite-tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+  .cite-body {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-mid);
+    max-width: 70ch;
+  }
+  .cite-body strong { color: var(--text); font-style: normal; font-weight: 500; }
+
+  /* ─────────────────────────── actions ── */
+  .actions {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 18px;
+    align-items: center;
+    border-top: 1px solid var(--panel-line);
+    padding-top: 22px;
+    opacity: 0;
+    animation: fadeIn 700ms 1380ms forwards;
+  }
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--panel-line);
+    padding: 12px 18px;
+    font-family: var(--hangul);
+    font-size: 13.5px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 220ms ease;
+  }
+  .btn:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 0 1px var(--cyan), 0 0 18px rgba(107, 215, 225, 0.18);
+    transform: translateY(-1px);
+  }
+  .btn.primary {
+    border-color: var(--cyan);
+    color: var(--bg-deep);
+    background: var(--cyan);
+  }
+  .btn.primary:hover {
+    background: var(--text);
+    border-color: var(--text);
+    color: var(--bg-deep);
+    box-shadow: 0 0 0 1px var(--text), 0 0 22px rgba(230, 232, 236, 0.25);
+  }
+  .btn .arr {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 16px;
+  }
+
+  .kbd-row {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    display: flex;
+    gap: 14px;
+  }
+  .kbd-row span { display: inline-flex; align-items: center; gap: 5px; }
+  kbd {
+    border: 1px solid var(--panel-line);
+    padding: 2px 7px;
+    background: var(--panel);
+    color: var(--text);
+    font-family: inherit;
+  }
+
+  /* ─────────────────────────── animations ── */
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+  }
+</style>
+</head>
+
+<body>
+  <div class="frame">
+
+    <!-- ──────────── SIDE RAIL ──────────── -->
+    <aside class="rail">
+      <div class="rail-mark">
+        <span class="glyph">S</span>
+        <div>
+          <div class="name">StudyMate</div>
+          <div class="sub">SESSION · 03</div>
+        </div>
+      </div>
+
+      <h6>Session</h6>
+      <ul class="rail-meta">
+        <li><span>Topic</span><strong>정규화</strong></li>
+        <li><span>Domain</span><strong>Database</strong></li>
+        <li><span>Diff</span><strong>2 / 3</strong></li>
+        <li><span>Mode</span><strong>약점 보강</strong></li>
+        <li><span>Started</span><strong>21:48</strong></li>
+      </ul>
+
+      <h6>Models</h6>
+      <ul class="rail-meta">
+        <li><span>QGen</span><strong class="ok">Sonnet 4.6</strong></li>
+        <li><span>Grader</span><strong class="ok">Sonnet 4.6</strong></li>
+        <li><span>Coord</span><strong class="warn">Haiku 4.5</strong></li>
+        <li><span>Retrieval</span><strong>BGE-M3</strong></li>
+      </ul>
+
+      <h6>Progress</h6>
+      <div class="rail-progress">
+        <div class="track"><div class="fill"></div></div>
+        <div class="label"><span>3 / 5</span><span>60%</span></div>
+      </div>
+    </aside>
+
+    <!-- ──────────── MAIN ──────────── -->
+    <main>
+
+      <header class="head">
+        <span class="live">Live</span>
+        <span class="center">section · question 03 of 05</span>
+        <span>04 : 12 elapsed</span>
+      </header>
+
+      <!-- question -->
+      <section class="q-wrap">
+        <span class="crop tl"></span><span class="crop tr"></span>
+        <span class="crop bl"></span><span class="crop br"></span>
+
+        <div class="q-callout">
+          <span class="dot"></span>
+          Question generated · k=5 retrieval
+        </div>
+
+        <h1 class="q-num">
+          03<span class="slash">/</span><span class="total">05</span>
+          <span class="arrow">↳</span>
+        </h1>
+
+        <p class="q-text">
+          정규화의 목적과 제1정규형, 제2정규형, 제3정규형의 충족 조건을
+          각각 한 문장으로 서술하시오.
+        </p>
+        <p class="q-text-en">
+          State the purpose of normalization, and describe in one sentence each the conditions for satisfying 1NF, 2NF, and 3NF.
+        </p>
+      </section>
+
+      <!-- learner answer divider -->
+      <div class="div-row">
+        <strong>02 Answer</strong>
+        <span class="line"></span>
+        <span class="num">·  152 chars  ·  38s</span>
+      </div>
+
+      <div class="answer">
+        <p>
+          정규화는 데이터 중복을 줄이기 위한 작업이다. 1NF는 원자값만 가져야 하고,
+          2NF는 부분 함수 종속을 제거하며, 3NF는 이행적 함수 종속을 제거한다.
+        </p>
+        <div class="answer-meta">
+          <span>length <strong>152</strong></span>
+          <span>elapsed <strong>00:38</strong></span>
+          <span>submitted <strong>21:51:42 KST</strong></span>
+        </div>
+      </div>
+
+      <!-- grading divider -->
+      <div class="div-row">
+        <strong>03 Grading</strong>
+        <span class="line"></span>
+        <span class="num">·  Sonnet 4.6  ·  rubric 5</span>
+      </div>
+
+      <section class="grade">
+        <div class="score-card">
+          <div class="tag">Score · partial</div>
+          <div class="num">0.83<span class="denom">/1.00</span></div>
+          <div class="bar"><div class="fill"></div></div>
+          <div class="legend">
+            <span>4 <strong>match</strong></span>
+            <span>1 <strong>miss</strong></span>
+            <span>p95 6.2s</span>
+          </div>
+        </div>
+
+        <ol class="rubric">
+          <li>
+            <span class="ix">R01</span>
+            <span class="lbl">정규화의 목적 (이상현상 방지)</span>
+            <span class="v miss">missing</span>
+          </li>
+          <li>
+            <span class="ix">R02</span>
+            <span class="lbl">1NF — 원자값 (atomic value)</span>
+            <span class="v ok">match</span>
+          </li>
+          <li>
+            <span class="ix">R03</span>
+            <span class="lbl">2NF — 부분 함수 종속 제거</span>
+            <span class="v ok">match</span>
+          </li>
+          <li>
+            <span class="ix">R04</span>
+            <span class="lbl">3NF — 이행적 함수 종속 제거</span>
+            <span class="v ok">match</span>
+          </li>
+          <li>
+            <span class="ix">R05</span>
+            <span class="lbl">서술 형식 — 각 항목 한 문장</span>
+            <span class="v ok">match</span>
+          </li>
+        </ol>
+      </section>
+
+      <!-- feedback -->
+      <section class="fb">
+        <p>
+          정규화의 목적을 <strong>'데이터 중복 감소'</strong>로만 답하면 절반의 답입니다.
+          정규화가 진짜로 막으려는 것은 갱신·삽입·삭제 시 발생하는
+          <strong>이상현상(anomaly)</strong>이며, 중복 감소는 그 결과로 따라옵니다.
+        </p>
+        <p class="tip">
+          다음 학습 — 정규화의 trade-off (조인 비용↑) 와 의도적 비정규화 사례까지 확장하면 만점 답안.
+        </p>
+      </section>
+
+      <!-- citation -->
+      <aside class="cite">
+        <div class="cite-tag">Cited<br>RAG · k=5</div>
+        <div class="cite-body">
+          <strong>한국산업인력공단 2023년 1회 정보처리기사 실기 해설, p.34.</strong>
+          "정규화의 1차적 목적은 함수적 종속성에 기반한 이상현상(anomaly)의
+          방지이며, 중복의 감소는 그 결과로 수반되는 부수적 효과이다." ·
+          <a href="#" style="color: var(--cyan); text-decoration: none; border-bottom: 1px solid var(--cyan-deep);">▸ 5개 청크 전체 보기</a>
+        </div>
+      </aside>
+
+      <!-- actions -->
+      <div class="actions">
+        <div class="btns">
+          <button class="btn primary">다음 문제 <span class="arr">→</span></button>
+          <button class="btn">재시도</button>
+          <button class="btn">오답 노트</button>
+        </div>
+        <div class="kbd-row">
+          <span><kbd>N</kbd> next</span>
+          <span><kbd>R</kbd> retry</span>
+          <span><kbd>S</kbd> save</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      var el = document.querySelector('.score-card .num');
+      if (!el) return;
+      var target = 0.83;
+
+      // safe DOM construction — no innerHTML, no untrusted input
+      var numNode = document.createTextNode('0.00');
+      var denomEl = document.createElement('span');
+      denomEl.className = 'denom';
+      denomEl.textContent = '/1.00';
+      el.textContent = '';
+      el.appendChild(numNode);
+      el.appendChild(denomEl);
+
+      var start = null, dur = 1100;
+      function step(ts) {
+        if (start === null) start = ts;
+        var t = Math.min(1, (ts - start) / dur);
+        var e = 1 - Math.pow(1 - t, 3);
+        numNode.nodeValue = (target * e).toFixed(2);
+        if (t < 1) requestAnimationFrame(step);
+        else numNode.nodeValue = target.toFixed(2);
+      }
+      setTimeout(function () { requestAnimationFrame(step); }, 800);
+    })();
+
+    document.addEventListener('keydown', function (e) {
+      if (e.target && /input|textarea/i.test(e.target.tagName)) return;
+      var k = e.key.toLowerCase();
+      var sel = { n: '.btn.primary', r: '.btn:nth-of-type(2)', s: '.btn:nth-of-type(3)' }[k];
+      if (sel) {
+        var btn = document.querySelector(sel);
+        if (btn) { btn.style.transform = 'translateY(-2px) scale(0.99)'; setTimeout(function () { btn.style.transform = ''; }, 160); }
+      }
+    });
+  </script>
+</body>
+</html>
