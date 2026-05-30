@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+.uv-cache/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
+.pnp.*
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Data (raw PDFs, indexed chunks, vector store, SQLite DB)
+data/raw/
+data/extracted/
+data/chunks/
+chroma/
+*.db
+*.sqlite
+*.sqlite3
+
+# Eval reports (history.csv tracked, individual reports gitignored)
+eval/reports/*.html
+!eval/reports/.gitkeep
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# OMC
+.omc/
