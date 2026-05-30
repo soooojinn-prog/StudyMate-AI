@@ -54,6 +54,7 @@ studymate-ai/
 │  ├─ tsconfig.json
 │  ├─ tailwind.config.ts
 │  ├─ postcss.config.mjs
+│  ├─ .eslintrc.json                    # ESLint (next/core-web-vitals) — keeps `next lint` non-interactive in CI
 │  ├─ next-env.d.ts                     # next dev 첫 실행 시 자동 생성
 │  ├─ src/
 │  │  ├─ app/
@@ -649,6 +650,7 @@ git commit -m "test(backend): smoke-test ruff and mypy availability"
 - Create: `frontend/src/app/layout.tsx`
 - Create: `frontend/src/app/globals.css`
 - Create: `frontend/src/app/page.tsx`
+- Create: `frontend/.eslintrc.json`
 
 - [ ] **Step 1: Create `frontend/package.json`**
 
@@ -817,6 +819,16 @@ export default function HomePage() {
 }
 ```
 
+- [ ] **Step 9b: Create `frontend/.eslintrc.json`**
+
+Required so `next lint` runs non-interactively in CI (Task 7) and locally via `make lint` (Task 8). Without this file, `next lint` opens an interactive prompt asking which ESLint preset to use, which hangs in non-TTY environments.
+
+```json
+{
+  "extends": "next/core-web-vitals"
+}
+```
+
 - [ ] **Step 10: Install dependencies**
 
 Run from `frontend/`:
@@ -826,14 +838,19 @@ pnpm install
 
 Expected: lockfile created, `node_modules/` populated. No errors.
 
-- [ ] **Step 11: Verify the app builds**
+- [ ] **Step 11: Verify the app builds, typechecks, and lints clean**
 
 Run from `frontend/`:
 ```bash
+pnpm typecheck
+pnpm lint
 pnpm build
 ```
 
-Expected: `✓ Compiled successfully` and `.next` directory created.
+Expected:
+- `pnpm typecheck` exits 0 with no output (tsc --noEmit success).
+- `pnpm lint` prints `✔ No ESLint warnings or errors`.
+- `pnpm build` prints `✓ Compiled successfully` and creates the `.next` directory.
 
 - [ ] **Step 12: Commit**
 
