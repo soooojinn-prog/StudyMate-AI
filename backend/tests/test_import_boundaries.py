@@ -1,4 +1,8 @@
-"""Verify the import-linter contracts pass. Acts as a CI tripwire if devs forget to run lint-imports."""
+"""Verify the import-linter contracts pass.
+
+Acts as a CI tripwire if devs forget to run lint-imports.
+"""
+
 import subprocess
 from pathlib import Path
 
@@ -13,7 +17,5 @@ def test_import_linter_contracts_hold() -> None:
         check=False,
     )
     assert result.returncode == 0, (
-        f"import-linter contracts broken:\n"
-        f"stdout:\n{result.stdout}\n"
-        f"stderr:\n{result.stderr}"
+        f"import-linter contracts broken:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )

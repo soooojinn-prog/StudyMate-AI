@@ -1,4 +1,5 @@
 """Health check endpoint."""
+
 from importlib.metadata import PackageNotFoundError, version
 
 from fastapi import APIRouter

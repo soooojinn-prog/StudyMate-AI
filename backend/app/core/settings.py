@@ -1,4 +1,5 @@
 """Application settings loaded from environment variables."""
+
 from functools import lru_cache
 
 from pydantic import Field
@@ -19,9 +20,7 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO")
 
     # CORS for the Next.js dev server
-    allowed_origins: list[str] = Field(
-        default_factory=lambda: ["http://localhost:3000"]
-    )
+    allowed_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
 
 @lru_cache(maxsize=1)
