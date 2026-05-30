@@ -11,12 +11,13 @@ forbidden_modules =
     app.rag
 
 [importlinter:contract:2]
-name = agents must not import api
+name = agents must not import api, eval
 type = forbidden
 source_modules =
     app.agents
 forbidden_modules =
     app.api
+    app.eval
 
 [importlinter:contract:3]
 name = rag must not import api, agents, learning, eval
