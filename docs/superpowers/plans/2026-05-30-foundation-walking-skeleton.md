@@ -2,15 +2,19 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** StudyMate AI 프로젝트의 walking skeleton — FastAPI 백엔드, Next.js 프론트엔드, Docker Compose 통합, 모듈 경계 자동 강제(import-linter), lint/test CI를 셋업하고 `docker compose up` 한 줄로 양쪽이 통신하는 /health 페이지가 작동하도록 만든다.
+**Goal:** StudyMate AI 프로젝트의 walking skeleton — FastAPI 백엔드, Next.js 프론트엔드, 호스트 직접 실행(Make 기반) 통합, 모듈 경계 자동 강제(import-linter), lint/test CI를 셋업하고 `make dev`로 양쪽이 통신하는 /health 페이지가 작동하도록 만든다. **Docker는 사용하지 않는다 (Windows에서 Docker Desktop이 무거워서 V1 제외, 선택적 컨테이너화는 Plan 7로 이동).**
 
-**Architecture:** Modular Monolith. 백엔드는 `app/{api,agents,rag,learning,eval,core}` 6개 도메인 모듈로 분할하고 import-linter로 의존성 방향을 CI에서 강제한다. 프론트엔드는 Next.js 14 App Router + Tailwind + shadcn/ui. Docker Compose가 양쪽을 하나의 네트워크에 띄우고 프론트가 백엔드 `/health`를 호출해 자체 페이지에 렌더링한다.
+**Architecture:** Modular Monolith. 백엔드는 `app/{api,agents,rag,learning,eval,core}` 6개 도메인 모듈로 분할하고 import-linter로 의존성 방향을 CI에서 강제한다. 프론트엔드는 Next.js 14 App Router + Tailwind. Make 기반 dev orchestration으로 두 프로세스(uvicorn + next dev)를 동시에 띄우고, 프론트가 백엔드 `/health`를 호출해 자체 페이지에 렌더링한다.
 
-**Tech Stack:** Python 3.12 / uv / FastAPI / Pydantic v2 / structlog / pytest / ruff / mypy strict / import-linter | Node 20 / pnpm / Next.js 14 / Tailwind | Docker Compose | GitHub Actions
+**Tech Stack:** Python 3.12 / uv / FastAPI / Pydantic v2 / structlog / pytest / ruff / mypy strict / import-linter | Node 20+ / pnpm / Next.js 14 / Tailwind | GNU Make | GitHub Actions
 
 **This plan is plan 1 of 7 in the StudyMate AI V1 series.** See `docs/superpowers/specs/2026-05-30-studymate-ai-design.md` §13 마일스톤.
 
-**Deferred from spec §10:** shadcn/ui is part of the V1 stack but is not initialized in Plan 1 because the walking skeleton has no UI components beyond a status card. It will be initialized in Plan 4 (Study UI) where the first interactive components are introduced. The same applies to LangSmith (Plan 3) and Sentry (Plan 7).
+**Deferred from spec:**
+- **shadcn/ui** — Plan 4 (Study UI). 첫 인터랙티브 컴포넌트가 등장할 때 도입.
+- **Docker / Docker Compose** — Plan 7. "선택적 컨테이너화" 마지막 task로. V1은 호스트 직접 실행.
+- **LangSmith** — Plan 3 (LangGraph).
+- **Sentry** — Plan 7 (에러 처리).
 
 ---
 
@@ -22,7 +26,6 @@ studymate-ai/
 │  ├─ pyproject.toml                    # uv 프로젝트 + 의존성 + ruff/mypy/pytest 설정
 │  ├─ .python-version                   # 3.12
 │  ├─ .importlinter                     # 모듈 경계 규칙
-│  ├─ Dockerfile                        # python:3.12-slim 기반
 │  ├─ app/
 │  │  ├─ __init__.py
 │  │  ├─ main.py                        # FastAPI 진입점 + lifespan
@@ -51,7 +54,6 @@ studymate-ai/
 │  ├─ tsconfig.json
 │  ├─ tailwind.config.ts
 │  ├─ postcss.config.mjs
-│  ├─ Dockerfile                        # node:20-alpine 기반
 │  ├─ next-env.d.ts                     # next dev 첫 실행 시 자동 생성
 │  ├─ src/
 │  │  ├─ app/
@@ -62,11 +64,11 @@ studymate-ai/
 │  │  │     └─ page.tsx                 # 백엔드 /health 호출 + 렌더
 │  │  └─ lib/
 │  │     └─ api.ts                      # backend 클라이언트 (BACKEND_URL env)
-├─ docker-compose.yml                   # api + frontend 서비스
+├─ .env.example                         # 백엔드/프론트엔드 공통 env 샘플
 ├─ .github/
 │  └─ workflows/
 │     └─ ci.yml                         # lint + test (backend & frontend)
-├─ Makefile                             # dev, test, lint, build, up, down
+├─ Makefile                             # install, dev, test, lint, typecheck, ci-local
 └─ README.md                            # 프로젝트 소개 + 실행 방법
 ```
 
@@ -77,7 +79,8 @@ studymate-ai/
 - **`backend/app/core/settings.py`**: 환경 변수만 다룬다. 다른 모듈은 `from app.core.settings import settings`로만 접근.
 - **`backend/.importlinter`**: 모듈 경계 규칙 단일 소스. Spec §3.3 표를 그대로 코드화.
 - **`frontend/src/lib/api.ts`**: 백엔드 URL/엔드포인트 함수 단일 진출입점. 페이지에서 fetch 직접 호출 금지.
-- **`docker-compose.yml`**: 개발용. 프로덕션 배포는 V2 (Plan 7 이후).
+- **`Makefile`**: 모든 개발자용 명령의 진출입점. `make dev`가 백엔드와 프론트엔드를 같은 셸에서 동시에 띄움.
+- **`.env.example`**: `cp .env.example .env`로 시작. `.env`는 gitignore.
 
 ---
 
@@ -170,7 +173,7 @@ testpaths = ["tests"]
 
 - [ ] **Step 4: Create the six domain module `__init__.py` files** — empty files marking namespace packages
 
-Files to create with empty content (just `""` or no content):
+Files to create with empty content:
 - `backend/app/api/__init__.py`
 - `backend/app/api/routes/__init__.py`
 - `backend/app/agents/__init__.py`
@@ -287,14 +290,14 @@ def create_app() -> FastAPI:
 app = create_app()
 ```
 
-- [ ] **Step 8: Install uv (skip if already installed) and sync dependencies**
+- [ ] **Step 8: Sync dependencies**
 
 Run from `backend/`:
 ```bash
 uv sync
 ```
 
-Expected: `Resolved N packages` and a new `uv.lock` file is created.
+Expected: `Resolved N packages` and `uv.lock` is created.
 
 - [ ] **Step 9: Verify the app imports without runtime errors**
 
@@ -363,7 +366,7 @@ Run from `backend/`:
 uv run pytest tests/test_health.py -v
 ```
 
-Expected: FAIL with `ModuleNotFoundError: No module named 'app.api.routes.health'` (because `main.py` already imports it but the module doesn't exist yet) or `404` if you previously had a stub. Either confirms the test correctly drives the implementation.
+Expected: FAIL with `ModuleNotFoundError: No module named 'app.api.routes.health'` (because `main.py` already imports it). This confirms the test correctly drives the implementation.
 
 - [ ] **Step 4: Implement `backend/app/api/routes/health.py`**
 
@@ -527,7 +530,7 @@ Expected: 1 passed.
 
 - [ ] **Step 5: Verify the contract actually catches violations (negative check)**
 
-Add a temporary import in `backend/app/core/settings.py`:
+Add a temporary import in `backend/app/core/settings.py` at the top of the file:
 ```python
 # Temporary intentional violation
 import app.api  # noqa
@@ -540,10 +543,7 @@ uv run lint-imports --config .importlinter
 
 Expected: `Contracts: 4 kept, 1 broken.` with the `core must not import any other app module` contract failing.
 
-Now **revert** the temporary import:
-```python
-# Delete the offending line so the file matches Task 1 Step 5
-```
+Now **revert** the temporary import (delete the two lines you just added):
 
 Re-run:
 ```bash
@@ -589,8 +589,6 @@ Expected: `Success: no issues found in N source files`. If you see errors, fix t
 - `Untyped decorator` errors are silenced by `disallow_untyped_decorators = false`.
 
 - [ ] **Step 3: Add a tiny sanity test that verifies ruff/mypy can be invoked**
-
-This is intentionally minimal — the real enforcement is in CI (Task 10). We just want a guard that catches local breakage.
 
 Create `backend/tests/test_lint_tools_runnable.py`:
 ```python
@@ -688,7 +686,7 @@ git commit -m "test(backend): smoke-test ruff and mypy availability"
 }
 ```
 
-- [ ] **Step 2: Create `frontend/pnpm-workspace.yaml`** (empty workspace declaration — keeps pnpm happy in a monorepo-friendly way)
+- [ ] **Step 2: Create `frontend/pnpm-workspace.yaml`**
 
 ```yaml
 packages:
@@ -728,7 +726,6 @@ packages:
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: "standalone",  // optimized Docker build
 };
 
 export default nextConfig;
@@ -796,7 +793,7 @@ export default function RootLayout({
 }
 ```
 
-- [ ] **Step 9: Create `frontend/src/app/page.tsx`** (landing — points to /health for the skeleton)
+- [ ] **Step 9: Create `frontend/src/app/page.tsx`** (landing — points to /health)
 
 ```tsx
 import Link from "next/link";
@@ -835,7 +832,7 @@ Run from `frontend/`:
 pnpm build
 ```
 
-Expected: `✓ Compiled successfully` and `.next/standalone` directory created.
+Expected: `✓ Compiled successfully` and `.next` directory created.
 
 - [ ] **Step 12: Commit**
 
@@ -862,8 +859,7 @@ git commit -m "feat(frontend): bootstrap Next.js 14 + Tailwind + pnpm"
 const DEFAULT_BACKEND_URL = "http://localhost:8000";
 
 function backendUrl(): string {
-  // BACKEND_URL is set by docker-compose for server components and at build
-  // time. Falls back to localhost for local pnpm dev.
+  // BACKEND_URL is set in .env.local for dev. Falls back to localhost.
   return process.env.BACKEND_URL ?? DEFAULT_BACKEND_URL;
 }
 
@@ -934,23 +930,7 @@ pnpm typecheck
 
 Expected: no errors.
 
-- [ ] **Step 4: Manually verify locally before Docker (skip if no Python/Node setup yet — Task 9 verifies via Docker)**
-
-Terminal A (from `backend/`):
-```bash
-uv run uvicorn app.main:app --reload --port 8000
-```
-
-Terminal B (from `frontend/`):
-```bash
-pnpm dev
-```
-
-Open `http://localhost:3000/health`. Expected: a card with `Status: ok`, `App: StudyMate AI`, `Version: 0.0.0-dev`.
-
-Stop both processes (Ctrl+C in each terminal).
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add frontend/src/lib/api.ts frontend/src/app/health/page.tsx
@@ -959,278 +939,7 @@ git commit -m "feat(frontend): add /health page calling backend"
 
 ---
 
-## Task 7: Backend Dockerfile
-
-**Files:**
-- Create: `backend/Dockerfile`
-- Create: `backend/.dockerignore`
-
-- [ ] **Step 1: Create `backend/.dockerignore`**
-
-```
-__pycache__
-*.pyc
-*.pyo
-.pytest_cache
-.ruff_cache
-.mypy_cache
-.venv
-tests
-.env
-.env.*
-```
-
-- [ ] **Step 2: Create `backend/Dockerfile`** (multi-stage, uv-based)
-
-```dockerfile
-# syntax=docker/dockerfile:1.7
-FROM python:3.12-slim AS base
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    UV_LINK_MODE=copy \
-    UV_PROJECT_ENVIRONMENT=/opt/venv
-
-WORKDIR /app
-
-# Install uv (pinned version for reproducibility)
-COPY --from=ghcr.io/astral-sh/uv:0.5.4 /uv /usr/local/bin/uv
-
-# Install runtime deps only (no dev group)
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
-
-# Copy application code
-COPY app ./app
-
-# Install the project itself (without re-resolving dependencies)
-RUN uv sync --frozen --no-dev
-
-ENV PATH="/opt/venv/bin:$PATH"
-
-EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-- [ ] **Step 3: Build the backend image**
-
-Run from `backend/`:
-```bash
-docker build -t studymate-backend:dev .
-```
-
-Expected: successful build ending with `naming to ... studymate-backend:dev done`.
-
-- [ ] **Step 4: Smoke-test the image directly**
-
-Run:
-```bash
-docker run --rm -p 8000:8000 --name studymate-backend-smoke studymate-backend:dev
-```
-
-In another terminal:
-```bash
-curl http://localhost:8000/health
-```
-
-Expected: `{"status":"ok","app":"StudyMate AI","version":"0.1.0"}` (or `0.0.0-dev` if metadata isn't installed — both acceptable).
-
-Stop the container: `Ctrl+C` in the run terminal.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add backend/Dockerfile backend/.dockerignore
-git commit -m "build(backend): add Dockerfile (uv, multi-stage, slim)"
-```
-
----
-
-## Task 8: Frontend Dockerfile
-
-**Files:**
-- Create: `frontend/Dockerfile`
-- Create: `frontend/.dockerignore`
-
-- [ ] **Step 1: Create `frontend/.dockerignore`**
-
-```
-node_modules
-.next
-.turbo
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.env
-.env.*
-```
-
-- [ ] **Step 2: Create `frontend/Dockerfile`** (multi-stage, leveraging Next.js standalone output)
-
-```dockerfile
-# syntax=docker/dockerfile:1.7
-FROM node:20-alpine AS deps
-RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
-WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
-
-FROM node:20-alpine AS builder
-RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN pnpm build
-
-FROM node:20-alpine AS runner
-ENV NODE_ENV=production
-WORKDIR /app
-
-# Copy the standalone Next.js server (smaller, no node_modules)
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-
-EXPOSE 3000
-CMD ["node", "server.js"]
-```
-
-- [ ] **Step 3: Build the frontend image**
-
-Run from `frontend/`:
-```bash
-docker build -t studymate-frontend:dev .
-```
-
-Expected: successful build.
-
-- [ ] **Step 4: Smoke-test (without backend — should render landing page but /health will error)**
-
-Run:
-```bash
-docker run --rm -p 3000:3000 --name studymate-frontend-smoke studymate-frontend:dev
-```
-
-Open `http://localhost:3000`. Expected: the landing page renders. `/health` will show "백엔드 호출 실패" — that's expected without backend running.
-
-Stop the container: `Ctrl+C`.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add frontend/Dockerfile frontend/.dockerignore
-git commit -m "build(frontend): add Dockerfile (Next.js standalone output)"
-```
-
----
-
-## Task 9: Docker Compose integration
-
-**Files:**
-- Create: `docker-compose.yml`
-- Create: `.env.example`
-
-- [ ] **Step 1: Create `.env.example`** at the project root
-
-```bash
-# Backend
-APP_NAME=StudyMate AI
-ENVIRONMENT=development
-LOG_LEVEL=INFO
-# JSON list — used by FastAPI CORS middleware
-ALLOWED_ORIGINS=["http://localhost:3000"]
-
-# Frontend
-# How the frontend (server-side) reaches the backend inside the compose network
-BACKEND_URL=http://api:8000
-```
-
-- [ ] **Step 2: Create `docker-compose.yml`** at the project root
-
-```yaml
-services:
-  api:
-    build:
-      context: ./backend
-    image: studymate-backend:dev
-    container_name: studymate-api
-    environment:
-      APP_NAME: ${APP_NAME:-StudyMate AI}
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-["http://localhost:3000"]}
-    ports:
-      - "8000:8000"
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  frontend:
-    build:
-      context: ./frontend
-    image: studymate-frontend:dev
-    container_name: studymate-frontend
-    environment:
-      BACKEND_URL: ${BACKEND_URL:-http://api:8000}
-      NODE_ENV: production
-    ports:
-      - "3000:3000"
-    depends_on:
-      api:
-        condition: service_healthy
-```
-
-- [ ] **Step 3: Copy the example env file**
-
-Run from the project root:
-```bash
-cp .env.example .env
-```
-
-(On Windows PowerShell: `Copy-Item .env.example .env`.)
-
-- [ ] **Step 4: Bring the stack up**
-
-Run from the project root:
-```bash
-docker compose up --build -d
-```
-
-Expected: both services build and start. `docker compose ps` shows both `studymate-api` and `studymate-frontend` as healthy/running.
-
-- [ ] **Step 5: Verify the walking skeleton end-to-end**
-
-```bash
-# 1) Backend reachable from host
-curl http://localhost:8000/health
-
-# 2) Frontend reachable from host
-curl -I http://localhost:3000
-
-# 3) Frontend /health (server-side fetch to api:8000 inside docker network)
-curl http://localhost:3000/health | grep -i "StudyMate AI"
-```
-
-Open `http://localhost:3000/health` in a browser. Expected: the card shows `Status: ok`, `App: StudyMate AI`, `Version: 0.1.0` (or `0.0.0-dev`). **No error banner.**
-
-- [ ] **Step 6: Tear the stack down**
-
-```bash
-docker compose down
-```
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add docker-compose.yml .env.example
-git commit -m "build: docker-compose wiring backend and frontend"
-```
-
----
-
-## Task 10: GitHub Actions CI
+## Task 7: GitHub Actions CI
 
 **Files:**
 - Create: `.github/workflows/ci.yml`
@@ -1317,7 +1026,7 @@ jobs:
 
 - [ ] **Step 2: Verify the workflow file is syntactically valid**
 
-Locally, just check that the YAML parses:
+Locally:
 ```bash
 python -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"
 ```
@@ -1331,40 +1040,66 @@ git add .github/workflows/ci.yml
 git commit -m "ci: lint, typecheck, test on backend and frontend"
 ```
 
-- [ ] **Step 4 (deferred until repo is pushed): Verify CI runs green on GitHub**
+- [ ] **Step 4 (deferred): Verify CI runs green on GitHub**
 
-Once the project is pushed to GitHub, open the Actions tab and confirm the `CI` workflow runs on push/PR and both jobs pass. If a job fails, fix locally and amend the relevant task.
+After push, open the Actions tab on GitHub and confirm both jobs pass. If a job fails, fix locally and push.
 
 ---
 
-## Task 11: Makefile + README skeleton
+## Task 8: Makefile + .env.example + README
 
 **Files:**
 - Create: `Makefile`
+- Create: `.env.example`
 - Create: `README.md`
 
-- [ ] **Step 1: Create `Makefile`** at the project root
+- [ ] **Step 1: Create `.env.example`** at the project root
+
+```bash
+# Backend environment variables
+APP_NAME=StudyMate AI
+ENVIRONMENT=development
+LOG_LEVEL=INFO
+# JSON list — used by FastAPI CORS middleware
+ALLOWED_ORIGINS=["http://localhost:3000"]
+
+# Frontend — how the Next.js server-side fetches the backend
+# (For local development. Default is http://localhost:8000.)
+BACKEND_URL=http://localhost:8000
+```
+
+- [ ] **Step 2: Create `Makefile`** at the project root
 
 ```makefile
-.PHONY: help install dev test lint typecheck build up down logs ci-local
+.PHONY: help install dev dev-backend dev-frontend test lint typecheck ci-local
 
 help:
 	@echo "StudyMate AI - common commands"
 	@echo ""
-	@echo "  install     install backend (uv sync) and frontend (pnpm install) deps"
-	@echo "  dev         start backend (uvicorn) and frontend (pnpm dev) — see notes"
-	@echo "  test        run backend pytest"
-	@echo "  lint        run ruff + ruff format check + frontend lint"
-	@echo "  typecheck   run mypy + frontend typecheck"
-	@echo "  build       docker compose build"
-	@echo "  up          docker compose up -d (production-like local)"
-	@echo "  down        docker compose down"
-	@echo "  logs        docker compose logs -f"
-	@echo "  ci-local    run the same checks CI runs"
+	@echo "  install       install backend (uv sync) and frontend (pnpm install) deps"
+	@echo "  dev           start backend and frontend concurrently (Ctrl-C stops both)"
+	@echo "  dev-backend   start only the backend (uvicorn, port 8000)"
+	@echo "  dev-frontend  start only the frontend (next dev, port 3000)"
+	@echo "  test          run backend pytest"
+	@echo "  lint          run ruff + ruff format check + frontend lint"
+	@echo "  typecheck     run mypy + frontend typecheck"
+	@echo "  ci-local      run the same checks CI runs"
 
 install:
 	cd backend && uv sync
 	cd frontend && pnpm install
+
+dev-backend:
+	cd backend && uv run uvicorn app.main:app --reload --port 8000
+
+dev-frontend:
+	cd frontend && pnpm dev
+
+# Run both concurrently. Ctrl-C kills the make process which terminates children
+# via the shell. The `wait` keeps make alive while children run.
+dev:
+	@echo "Starting backend (8000) and frontend (3000). Ctrl-C to stop both."
+	@$(MAKE) -j2 dev-backend dev-frontend
 
 test:
 	cd backend && uv run pytest
@@ -1378,24 +1113,12 @@ typecheck:
 	cd backend && uv run mypy app tests
 	cd frontend && pnpm typecheck
 
-build:
-	docker compose build
-
-up:
-	docker compose up -d
-
-down:
-	docker compose down
-
-logs:
-	docker compose logs -f
-
 ci-local: lint typecheck test
 	cd backend && uv run lint-imports --config .importlinter
 	cd frontend && pnpm build
 ```
 
-- [ ] **Step 2: Create `README.md`** at the project root
+- [ ] **Step 3: Create `README.md`** at the project root
 
 ````markdown
 # StudyMate AI
@@ -1407,48 +1130,40 @@ ci-local: lint typecheck test
 
 ## Quick Start
 
-전제 조건: Docker, Docker Compose v2.
+전제 조건: Python 3.12+, Node 20+, [uv](https://docs.astral.sh/uv/),
+[pnpm](https://pnpm.io/), GNU Make (선택).
 
 ```bash
 cp .env.example .env
-docker compose up --build -d
-
-# 접속
-open http://localhost:3000        # 프론트엔드 (Next.js)
-open http://localhost:8000/docs   # 백엔드 OpenAPI
-open http://localhost:3000/health # 통합 작동 확인
-```
-
-종료:
-```bash
-docker compose down
-```
-
-## 로컬 개발 (Docker 없이)
-
-전제: Python 3.12, Node 20+, uv, pnpm.
-
-```bash
 make install
-# Terminal A
-cd backend && uv run uvicorn app.main:app --reload
-# Terminal B
-cd frontend && pnpm dev
+
+# 옵션 A: 한 줄로 둘 다 띄우기 (Make 필요)
+make dev
+
+# 옵션 B: Make 없으면 두 터미널에서 직접
+#   Terminal 1: cd backend  && uv run uvicorn app.main:app --reload --port 8000
+#   Terminal 2: cd frontend && pnpm dev
 ```
+
+접속:
+- 프론트엔드: <http://localhost:3000>
+- 백엔드 OpenAPI: <http://localhost:8000/docs>
+- 통합 작동 확인: <http://localhost:3000/health>
 
 ## 자주 쓰는 명령
 
 | 목적 | 명령 |
 |---|---|
+| 의존성 설치 | `make install` |
+| 동시 실행 | `make dev` |
+| 백엔드만 | `make dev-backend` |
+| 프론트엔드만 | `make dev-frontend` |
 | 전체 테스트 | `make test` |
 | 전체 린트 | `make lint` |
 | 타입 체크 | `make typecheck` |
 | CI 와 동일한 체크 | `make ci-local` |
-| 컨테이너 로그 | `make logs` |
 
 ## 디렉토리 구조
-
-설계 문서 §3.2 참고.
 
 ```
 backend/   # FastAPI + LangGraph (Plan 3에서 추가) + RAG (Plan 2)
@@ -1460,12 +1175,18 @@ docs/      # specs, plans, ADR
 
 `backend/.importlinter` 가 단일 소스. 위반 시 CI 실패.
 
+## Docker?
+
+V1에선 사용하지 않음. Windows에서 Docker Desktop의 RAM/디스크 비용을 피하고
+재현성은 `uv.lock` + `pnpm-lock.yaml`로 확보. 선택적 컨테이너화는 Plan 7
+참고.
+
 ## License
 
-TBD (개인 포트폴리오, 외부 배포 시 라이선스 결정).
+개인 포트폴리오 (라이선스 미정).
 ````
 
-- [ ] **Step 3: Run `make ci-local` to verify all checks pass locally**
+- [ ] **Step 4: Run `make ci-local` to verify all checks pass locally**
 
 Run from the project root:
 ```bash
@@ -1474,63 +1195,77 @@ make ci-local
 
 Expected: ruff/mypy/import-linter/pytest pass on backend; lint/typecheck/build pass on frontend.
 
-(On Windows without GNU Make, run each subcommand manually as a fallback; or use `wsl make ci-local`.)
+> Windows without GNU Make: run each subcommand from the Makefile manually, or
+> use `wsl make ci-local`, or install [Chocolatey make](https://chocolatey.org/packages/make).
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add Makefile README.md
-git commit -m "docs: add README quick start and Makefile shortcuts"
+git add Makefile README.md .env.example
+git commit -m "docs: add README quick start, Makefile shortcuts, .env.example"
 ```
 
 ---
 
-## Task 12: Verify the walking skeleton end-to-end one more time + sanity check
+## Task 9: End-to-end verification
 
-This is the gate: the entire plan is "done" only if a fresh `docker compose up` from a clean state produces a working /health page.
+The plan is "done" only if a fresh `make dev` from a clean state produces a working /health page in the browser.
 
 - [ ] **Step 1: Clean local state**
 
+Run from the project root:
 ```bash
-docker compose down -v
-docker image rm studymate-backend:dev studymate-frontend:dev 2>/dev/null || true
+# Remove caches and virtual envs so the verification is honest
+rm -rf backend/.venv backend/__pycache__ backend/.pytest_cache backend/.ruff_cache backend/.mypy_cache
+rm -rf frontend/node_modules frontend/.next
 ```
 
-- [ ] **Step 2: Rebuild and bring up**
+(On Windows PowerShell: replace `rm -rf` with `Remove-Item -Recurse -Force`.)
+
+- [ ] **Step 2: Reinstall and run all checks**
 
 ```bash
-docker compose up --build -d
-docker compose ps
+make install
+make ci-local
 ```
 
-Expected: both services healthy/running.
+Expected: both commands exit 0.
 
-- [ ] **Step 3: Programmatic smoke check**
+- [ ] **Step 3: Start the dev servers**
 
 ```bash
-# Backend
+make dev
+```
+
+Wait until both lines appear in the logs:
+- Backend: `Uvicorn running on http://0.0.0.0:8000`
+- Frontend: `Local:   http://localhost:3000` and `✓ Ready in N ms`
+
+- [ ] **Step 4: Programmatic smoke check (in another terminal)**
+
+```bash
+# Backend reachable
 curl --fail http://localhost:8000/health
-# Frontend page contains status info
+# Frontend /health rendered with backend data
 curl --fail --silent http://localhost:3000/health | grep -i "Status"
 ```
 
-Both should return 0. If either fails, debug before declaring done.
+Both should return 0.
 
-- [ ] **Step 4: Browser check**
+- [ ] **Step 5: Browser check**
 
-Open `http://localhost:3000` → click "시스템 상태 확인 →" → confirm card renders `Status: ok`, `App: StudyMate AI`, no error banner.
+Open <http://localhost:3000> → click "시스템 상태 확인 →" → confirm the card shows
+`Status: ok`, `App: StudyMate AI`, no error banner.
 
-- [ ] **Step 5: Tear down**
+- [ ] **Step 6: Stop the dev servers**
 
-```bash
-docker compose down
-```
+Press `Ctrl-C` in the terminal running `make dev`. Confirm both processes exit.
 
-- [ ] **Step 6: Final commit (any leftover lockfile updates)**
+- [ ] **Step 7: Final commit (any lockfile updates)**
 
 ```bash
 git status
-# If uv.lock or pnpm-lock.yaml changed during the verification, stage and commit.
+# If uv.lock or pnpm-lock.yaml changed during verification, stage and commit.
 git add backend/uv.lock frontend/pnpm-lock.yaml 2>/dev/null || true
 git diff --cached --quiet || git commit -m "chore: lock files after walking-skeleton verification"
 ```
@@ -1541,14 +1276,15 @@ git diff --cached --quiet || git commit -m "chore: lock files after walking-skel
 
 Plan 1 is complete when **all** of the following hold:
 
-1. `docker compose up --build` brings both `studymate-api` and `studymate-frontend` up healthy.
-2. `http://localhost:3000/health` renders backend status in the browser without errors.
-3. `make ci-local` exits 0 on a clean checkout.
-4. `backend/.importlinter` enforces all 5 module-boundary contracts and the guard test in `tests/test_import_boundaries.py` passes.
-5. `.github/workflows/ci.yml` is committed and ready to run on push (real CI verification deferred until repo is pushed to GitHub).
+1. `make install` exits 0 on a clean checkout.
+2. `make dev` starts both processes; pressing Ctrl-C cleanly stops both.
+3. <http://localhost:3000/health> renders backend status without errors.
+4. `make ci-local` exits 0.
+5. `backend/.importlinter` enforces all 5 module-boundary contracts and the guard test in `tests/test_import_boundaries.py` passes.
+6. `.github/workflows/ci.yml` is committed; once pushed to GitHub the CI workflow runs and both jobs pass (verification deferred until push).
 
 ---
 
 ## What's Next
 
-Plan 2: **RAG Pipeline & Indexing**. PDF 수집 스크립트, pdfplumber 추출, cleaner, chunker, BGE-M3 임베딩, topic_tagger (Haiku 호출), ChromaDB persistent client, retriever. 검증: `make seed`로 1년치 기출 인덱싱 + `retriever.retrieve(query)` 가 한국어 쿼리에 대해 적합한 chunk를 반환.
+Plan 2: **RAG Pipeline & Indexing**. PDF 수집 스크립트, pdfplumber 추출, cleaner, chunker, BGE-M3 임베딩, topic_tagger (Haiku 호출), ChromaDB persistent client, retriever. 검증: `make seed`로 1년치 기출 인덱싱 + `retriever.retrieve(query)`가 한국어 쿼리에 대해 적합한 chunk를 반환.

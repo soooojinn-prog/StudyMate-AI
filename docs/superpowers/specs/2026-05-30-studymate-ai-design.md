@@ -373,29 +373,25 @@ $ python -m app.eval.runner --dataset golden_v1 --tag $(git rev-parse --short HE
 
 ## 9. 배포
 
-### V1: 로컬 Docker Compose
+### V1: 로컬 프로세스 (Make 기반)
 
-```yaml
-services:
-  api:
-    build: ./backend
-    volumes: ["./data:/data", "./chroma:/chroma"]
-    env_file: .env
-    ports: ["8000:8000"]
+Docker Desktop이 Windows에서 차지하는 비용(평시 RAM 2~4GB, 빌드 시 4~8GB, WSL2 오버헤드)을 피하기 위해 **V1은 컨테이너 없이 호스트에서 직접 실행**한다. 재현성은 lock 파일(`uv.lock`, `pnpm-lock.yaml`)이 담당.
 
-  frontend:
-    build: ./frontend
-    ports: ["3000:3000"]
-    depends_on: [api]
+```bash
+make install   # 백엔드: uv sync, 프론트엔드: pnpm install
+make dev       # 백엔드(uvicorn)와 프론트엔드(next dev) 동시 실행
+make seed      # PDF 다운로드 + 인덱싱 + 골든셋 로드
 ```
 
-- 단일 명령어 실행: `docker compose up`
-- ChromaDB는 임베디드 모드 (파일 영속). V2에서 분리.
-- `.env.example` + `make seed` (PDF 다운로드 + 인덱싱 + 골든셋 로드) → README 한 줄로 재현 가능
+- 백엔드: `uv run uvicorn app.main:app --reload --port 8000`
+- 프론트엔드: `pnpm dev` (Next.js dev server, 3000 포트)
+- ChromaDB는 임베디드 모드 (`./chroma` 파일 영속)
+- SQLite는 `./data/studymate.db`
 
 ### V2 후보
-- 백엔드: Railway/Render
-- 프론트: Vercel
+- (선택) **컨테이너화** — Dockerfile + Docker Compose. Plan 7에 "선택적 컨테이너화" task로 포함. 어필 가치는 있지만 Windows에선 무거우니 마지막에 옵션으로 추가.
+- 백엔드 배포: Railway 또는 Render (Python 빌드팩 직접 사용)
+- 프론트엔드 배포: Vercel (Next.js 네이티브)
 - 면접 며칠 전 띄워서 URL 공유
 
 ---
@@ -431,6 +427,7 @@ services:
 | 확장성? | 분석 에이전트 추가(분석 로직 → LangGraph 노드 승격), 다른 도메인은 토픽 집합 + 인덱스 컬렉션만 교체 |
 | 왜 BGE-M3? | 한국어 RAG에서 OpenAI text-embedding-3 대비 가성비, 로컬 호스팅으로 비용 0. 추상화로 Voyage-3 교체 가능 |
 | 왜 ChromaDB? Qdrant/Weaviate 대신? | V1 임베디드 모드로 운영 단순. 50문항 규모 + 문서 수만 단위에선 차이 미미. 인덱스 추상화로 교체 가능 |
+| 왜 Docker 안 썼나? | Windows에서 Docker Desktop은 평시 RAM 2~4GB, 빌드 시 4~8GB 차지하고 WSL2 오버헤드 큼. 포트폴리오 작품에서 비용 대비 효용 낮다고 판단. 재현성은 `uv.lock` + `pnpm-lock.yaml`로, 배포는 Railway+Vercel 네이티브로 동등 달성. Plan 7에 선택적 컨테이너화 옵션 남겨둠 |
 
 ---
 
