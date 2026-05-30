@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StudyMate — 學習日誌 03</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+<link
+  rel="stylesheet"
+  as="style"
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+/>
+
+<style>
+  :root {
+    /* ink palette */
+    --paper: #f6f2ea;
+    --paper-shade: #efeadf;
+    --ink: #1a1715;
+    --ink-mid: #4d4641;
+    --ink-soft: #79706a;
+    --rule: #d8d2c5;
+    --accent: #b1331f;     /* dried vermillion ink */
+    --accent-soft: #c95234;
+
+    /* type */
+    --display: "EB Garamond", "Apple Garamond", "Times New Roman", serif;
+    --hangul: "Pretendard Variable", "Pretendard", -apple-system,
+      BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--hangul);
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* paper grain */
+    background-image:
+      radial-gradient(rgba(26, 23, 21, 0.012) 1px, transparent 1px),
+      radial-gradient(rgba(26, 23, 21, 0.018) 1px, transparent 1px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 1px 2px;
+  }
+
+  /* selection — never default blue */
+  ::selection { background: var(--accent); color: var(--paper); }
+
+  /* ──────────────────────────────────────────── shell ── */
+  .sheet {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 64px 96px;
+    position: relative;
+  }
+
+  @media (max-width: 720px) {
+    .sheet { padding: 36px 24px 72px; }
+  }
+
+  /* ──────────────────────────────────────────── masthead ── */
+  .masthead {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1.5px solid var(--ink);
+    opacity: 0;
+    animation: fadeIn 600ms 80ms forwards;
+  }
+
+  .brand {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: 0.01em;
+  }
+  .brand sup {
+    font-style: normal;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-left: 6px;
+    color: var(--ink-soft);
+  }
+
+  .colophon {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .stamp {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .stamp em {
+    font-style: normal;
+    color: var(--accent);
+    margin-left: 6px;
+  }
+
+  /* second rule (thin) just below the thick one */
+  .masthead-tail {
+    height: 1px;
+    background: var(--ink);
+    margin-top: 2px;
+    opacity: 0;
+    animation: fadeIn 600ms 160ms forwards;
+  }
+
+  /* ──────────────────────────────────────────── progress ── */
+  .progress-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 32px;
+    margin: 28px 0 24px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    opacity: 0;
+    animation: fadeIn 600ms 220ms forwards;
+  }
+
+  .progress-dots {
+    display: inline-flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .dot {
+    width: 11px; height: 11px;
+    border: 1.2px solid var(--ink);
+    border-radius: 50%;
+  }
+  .dot.done { background: var(--ink); }
+  .dot.now {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(177, 51, 31, 0.16);
+  }
+
+  .progress-meta { justify-self: end; }
+  .progress-meta strong {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  /* ──────────────────────────────────────────── question ── */
+  .question {
+    display: grid;
+    grid-template-columns: 168px 1fr;
+    gap: 48px;
+    margin: 12px 0 60px;
+  }
+
+  @media (max-width: 720px) {
+    .question { grid-template-columns: 1fr; gap: 20px; }
+  }
+
+  .q-meta {
+    border-top: 1px solid var(--ink);
+    padding-top: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    line-height: 2;
+    opacity: 0;
+    animation: fadeIn 600ms 320ms forwards;
+  }
+  .q-meta dt { display: inline; color: var(--ink-soft); }
+  .q-meta dd { display: inline; margin: 0; }
+  .q-meta dd::after { content: ""; display: block; }
+
+  .q-body {
+    opacity: 0;
+    animation: riseIn 700ms 280ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+
+  .q-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .q-number {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(74px, 11vw, 124px);
+    line-height: 0.95;
+    margin: 4px 0 18px;
+    letter-spacing: -0.01em;
+  }
+  .q-number .ko {
+    font-family: var(--hangul);
+    font-style: normal;
+    font-weight: 200;
+    font-size: 0.62em;
+    margin-right: 14px;
+    color: var(--ink-mid);
+    letter-spacing: 0.04em;
+  }
+
+  .q-prompt {
+    font-size: 21px;
+    line-height: 1.55;
+    font-weight: 500;
+    letter-spacing: -0.012em;
+    margin: 0 0 8px;
+    max-width: 38ch;
+  }
+
+  .q-prompt-en {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 16px;
+    color: var(--ink-mid);
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  /* ──────────────────────────────────────────── major rule ── */
+  .rule {
+    height: 4px;
+    background: var(--ink);
+    margin: 0 0 8px;
+    position: relative;
+  }
+  .rule::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -6px;
+    height: 1px;
+    background: var(--ink);
+  }
+  .rule-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 18px 0 26px;
+  }
+  .rule-label em {
+    font-style: normal;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ──────────────────────────────────────────── answer block ── */
+  .answer {
+    display: grid;
+    grid-template-columns: 168px 1fr;
+    gap: 48px;
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeIn 700ms 480ms forwards;
+  }
+  @media (max-width: 720px) {
+    .answer { grid-template-columns: 1fr; gap: 16px; }
+  }
+
+  .answer-side {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    line-height: 2;
+  }
+  .answer-side .kanji {
+    font-family: var(--display);
+    font-style: italic;
+    text-transform: none;
+    font-size: 18px;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+
+  .answer-body {
+    font-size: 17px;
+    line-height: 1.85;
+    color: var(--ink);
+    max-width: 60ch;
+    position: relative;
+  }
+  .answer-body::before {
+    content: "「";
+    position: absolute;
+    left: -28px; top: -8px;
+    font-family: var(--display);
+    font-size: 38px;
+    color: var(--ink-soft);
+    line-height: 1;
+  }
+
+  .answer-meta {
+    margin-top: 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .answer-meta strong { color: var(--ink); font-weight: 500; }
+
+  /* ──────────────────────────────────────────── grading ── */
+  .grade {
+    display: grid;
+    grid-template-columns: 168px 1fr;
+    gap: 48px;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeIn 700ms 720ms forwards;
+  }
+  @media (max-width: 720px) {
+    .grade { grid-template-columns: 1fr; gap: 16px; }
+  }
+
+  .grade-side {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    line-height: 2;
+  }
+  .grade-side .kanji {
+    font-family: var(--display);
+    font-style: italic;
+    text-transform: none;
+    font-size: 18px;
+    color: var(--ink);
+  }
+
+  .grade-body { max-width: 64ch; }
+
+  .score {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 28px;
+    font-family: var(--display);
+    line-height: 1;
+  }
+  .score-num {
+    font-size: 84px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  .score-denom {
+    font-size: 22px;
+    font-style: italic;
+    color: var(--ink-soft);
+    letter-spacing: 0.01em;
+  }
+  .score-badge {
+    margin-left: auto;
+    align-self: end;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    padding: 5px 9px;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    align-self: center;
+  }
+
+  /* rubric — italian-leather list */
+  .rubric { list-style: none; padding: 0; margin: 0; }
+  .rubric li {
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    align-items: baseline;
+    gap: 16px;
+    padding: 14px 0;
+    border-top: 1px solid var(--rule);
+    transition: padding-left 220ms ease;
+  }
+  .rubric li:last-child { border-bottom: 1px solid var(--rule); }
+  .rubric li:hover { padding-left: 8px; background: rgba(177, 51, 31, 0.025); }
+
+  .rubric .ix {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--ink-soft);
+  }
+  .rubric .label {
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .rubric .verdict {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    padding-left: 12px;
+    border-left: 1px solid var(--rule);
+  }
+  .rubric .verdict.match { color: var(--ink); }
+  .rubric .verdict.miss { color: var(--accent); }
+  .rubric .verdict.miss::before {
+    content: "▲";
+    margin-right: 6px;
+    font-size: 9px;
+  }
+
+  /* ──────────────────────────────────────────── feedback ── */
+  .feedback {
+    display: grid;
+    grid-template-columns: 168px 1fr;
+    gap: 48px;
+    margin-bottom: 36px;
+    opacity: 0;
+    animation: fadeIn 700ms 980ms forwards;
+  }
+  @media (max-width: 720px) {
+    .feedback { grid-template-columns: 1fr; gap: 16px; }
+  }
+
+  .fb-side {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    line-height: 2;
+  }
+  .fb-side .kanji {
+    font-family: var(--display);
+    font-style: italic;
+    text-transform: none;
+    font-size: 18px;
+    color: var(--ink);
+  }
+
+  .fb-body {
+    font-size: 18px;
+    line-height: 1.75;
+    max-width: 56ch;
+    color: var(--ink);
+  }
+  .fb-body strong {
+    background: linear-gradient(transparent 70%, rgba(177, 51, 31, 0.28) 70%);
+    font-weight: 500;
+    padding: 0 2px;
+  }
+
+  .fb-tip {
+    margin-top: 22px;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink-mid);
+    padding-left: 18px;
+    border-left: 3px solid var(--accent);
+    max-width: 48ch;
+  }
+
+  /* ──────────────────────────────────────────── citation ── */
+  .cite {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: 168px 1fr;
+    gap: 48px;
+    padding-top: 18px;
+    border-top: 1px solid var(--ink);
+    opacity: 0;
+    animation: fadeIn 700ms 1180ms forwards;
+  }
+  @media (max-width: 720px) {
+    .cite { grid-template-columns: 1fr; gap: 12px; }
+  }
+
+  .cite-side {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .cite-body {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 15.5px;
+    color: var(--ink-mid);
+    line-height: 1.7;
+    max-width: 64ch;
+  }
+  .cite-body a { color: var(--ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+  /* ──────────────────────────────────────────── actions ── */
+  .actions {
+    margin-top: 64px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeIn 700ms 1300ms forwards;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px;
+    border: 1.4px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--hangul);
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 220ms ease, color 220ms ease, transform 220ms ease;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); transform: translateY(-1px); }
+  .btn.solid { background: var(--ink); color: var(--paper); }
+  .btn.solid:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+  .btn .arrow {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 18px;
+  }
+  .keys {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .keys kbd {
+    border: 1px solid var(--ink-soft);
+    padding: 2px 6px;
+    background: var(--paper-shade);
+    color: var(--ink);
+    font-family: inherit;
+    margin: 0 3px;
+  }
+
+  /* ──────────────────────────────────────────── animations ── */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+  }
+</style>
+</head>
+
+<body>
+  <article class="sheet">
+
+    <!-- ─── masthead ─── -->
+    <header class="masthead">
+      <div class="brand">StudyMate<sup>vol. 01 · iss. 03</sup></div>
+      <div class="colophon">an editorial log for 정보처리기사 실기</div>
+      <div class="stamp">Session 2026.05.30 <em>·LIVE</em></div>
+    </header>
+    <div class="masthead-tail"></div>
+
+    <!-- ─── progress ─── -->
+    <div class="progress-row">
+      <span>Topic — 정규화 / DB</span>
+      <span class="progress-dots" aria-label="Progress 3 of 5">
+        <span class="dot done"></span>
+        <span class="dot done"></span>
+        <span class="dot now"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </span>
+      <span class="progress-meta">Question <strong>03 / 05</strong></span>
+    </div>
+
+    <!-- ─── question ─── -->
+    <section class="question">
+      <aside class="q-meta">
+        <dl>
+          <dt>Topic</dt><dd>정규화</dd>
+          <dt>Domain</dt><dd>Database</dd>
+          <dt>Diff</dt><dd>2 / 3</dd>
+          <dt>Type</dt><dd>서술형</dd>
+          <dt>Time</dt><dd>04:12</dd>
+        </dl>
+      </aside>
+      <div class="q-body">
+        <p class="q-tag">Question No.03 — 한국산업인력공단 출제 변형</p>
+        <h1 class="q-number"><span class="ko">問</span>03</h1>
+        <p class="q-prompt">
+          정규화의 목적과 제1정규형, 제2정규형, 제3정규형의 충족 조건을 각각 한 문장으로 서술하시오.
+        </p>
+        <p class="q-prompt-en">
+          State the purpose of normalization, and describe in one sentence each the conditions for satisfying 1NF, 2NF, and 3NF.
+        </p>
+      </div>
+    </section>
+
+    <!-- ─── answer ─── -->
+    <div class="rule" role="separator"></div>
+    <p class="rule-label">II — <em>學習者 答案</em>  Learner's response</p>
+
+    <section class="answer">
+      <aside class="answer-side">
+        <span class="kanji">答</span><br>
+        Submitted<br>
+        <strong style="color: var(--ink);">00:38</strong> ago<br>
+        152 chars
+      </aside>
+      <div class="answer-body">
+        <p>
+          정규화는 데이터 중복을 줄이기 위한 작업이다. 1NF는 원자값만 가져야 하고,
+          2NF는 부분 함수 종속을 제거하며, 3NF는 이행적 함수 종속을 제거한다.
+        </p>
+        <p class="answer-meta">Submitted via /study/session/03 · 152 chars · 38s</p>
+      </div>
+    </section>
+
+    <!-- ─── grading ─── -->
+    <div class="rule" role="separator"></div>
+    <p class="rule-label">III — <em>採點</em>  Grading by Sonnet 4.6</p>
+
+    <section class="grade">
+      <aside class="grade-side">
+        <span class="kanji">採</span><br>
+        Rubric<br>
+        <strong style="color: var(--ink);">5</strong> items<br>
+        4 ⊕ 1 ⊖
+      </aside>
+      <div class="grade-body">
+        <div class="score">
+          <span class="score-num">0.83</span>
+          <span class="score-denom">/ 1.00</span>
+          <span class="score-badge">Partial</span>
+        </div>
+
+        <ol class="rubric" aria-label="Rubric items">
+          <li>
+            <span class="ix">01.</span>
+            <span class="label">정규화의 목적 (이상현상 방지)</span>
+            <span class="verdict miss">누락 — 중복만 언급</span>
+          </li>
+          <li>
+            <span class="ix">02.</span>
+            <span class="label">1NF — 원자값 (atomic value)</span>
+            <span class="verdict match">일치</span>
+          </li>
+          <li>
+            <span class="ix">03.</span>
+            <span class="label">2NF — 부분 함수 종속 제거</span>
+            <span class="verdict match">일치</span>
+          </li>
+          <li>
+            <span class="ix">04.</span>
+            <span class="label">3NF — 이행적 함수 종속 제거</span>
+            <span class="verdict match">일치</span>
+          </li>
+          <li>
+            <span class="ix">05.</span>
+            <span class="label">서술 형식 — 각 항목 한 문장</span>
+            <span class="verdict match">일치</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ─── feedback ─── -->
+    <div class="rule" role="separator"></div>
+    <p class="rule-label">IV — <em>補講</em>  Reinforcement note</p>
+
+    <section class="feedback">
+      <aside class="fb-side">
+        <span class="kanji">講</span><br>
+        Next study<br>
+        <strong style="color: var(--ink);">22:00</strong><br>
+        Topic queued
+      </aside>
+      <div class="fb-body">
+        <p>
+          정규화의 목적을 <strong>'데이터 중복 감소'</strong>로만 답하면 절반의 답입니다.
+          정규화가 진짜로 막으려는 것은 갱신·삽입·삭제 시 발생하는 <strong>이상현상(anomaly)</strong>이며,
+          중복 감소는 그 결과로 따라옵니다.
+        </p>
+        <p class="fb-tip">
+          ☞ 다음 학습 — 정규화의 trade-off (조인 비용↑) 와 의도적 비정규화 사례까지
+          확장하면 만점 답안.
+        </p>
+      </div>
+    </section>
+
+    <!-- ─── citation ─── -->
+    <aside class="cite">
+      <div class="cite-side">Cited<br>RAG · k=5</div>
+      <div class="cite-body">
+        <em>한국산업인력공단 2023년 1회 정보처리기사 실기 해설.</em>
+        "정규화의 1차적 목적은 함수적 종속성에 기반한 <em>이상현상(anomaly)</em>의 방지이며,
+        중복의 감소는 그 결과로 수반되는 부수적 효과이다." p.34
+        <br><a href="#">▸ 인용된 5개 청크 전체 보기</a>
+      </div>
+    </aside>
+
+    <!-- ─── actions ─── -->
+    <div class="actions">
+      <button class="btn solid">다음 문제 <span class="arrow">→</span></button>
+      <button class="btn">재시도</button>
+      <button class="btn">오답 노트에 저장</button>
+      <span class="keys"><kbd>N</kbd> next · <kbd>R</kbd> retry · <kbd>S</kbd> save</span>
+    </div>
+
+  </article>
+
+  <script>
+    // gentle digit count-up on the score
+    (function () {
+      var el = document.querySelector('.score-num');
+      if (!el) return;
+      var target = parseFloat(el.textContent);
+      if (Number.isNaN(target)) return;
+      el.textContent = '0.00';
+      var start = null;
+      var dur = 1100;
+      function tick(ts) {
+        if (start === null) start = ts;
+        var t = Math.min(1, (ts - start) / dur);
+        // ease-out cubic
+        var e = 1 - Math.pow(1 - t, 3);
+        el.textContent = (target * e).toFixed(2);
+        if (t < 1) requestAnimationFrame(tick);
+        else el.textContent = target.toFixed(2);
+      }
+      // delay until the grade block fades in
+      setTimeout(function () { requestAnimationFrame(tick); }, 820);
+    })();
+
+    // keyboard shortcuts for the demo
+    document.addEventListener('keydown', function (e) {
+      if (e.target && /input|textarea/i.test(e.target.tagName)) return;
+      var k = e.key.toLowerCase();
+      if (k === 'n' || k === 'r' || k === 's') {
+        var sel = { n: '.btn.solid', r: '.btn:nth-of-type(2)', s: '.btn:nth-of-type(3)' }[k];
+        var btn = document.querySelector(sel);
+        if (btn) { btn.style.transform = 'translateY(-2px) scale(0.99)'; setTimeout(function () { btn.style.transform = ''; }, 160); }
+      }
+    });
+  </script>
+</body>
+</html>
