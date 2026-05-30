@@ -9,6 +9,12 @@ dependencies = [
   "pydantic-settings>=2.5",
   "uvicorn[standard]>=0.32",
   "structlog>=24.4",
+  "pdfplumber>=0.11",
+  "sentence-transformers>=3.2",
+  "chromadb>=0.5.20",
+  "anthropic>=0.39",
+  "pyyaml>=6.0",
+  "typer>=0.13",
 ]
 
 [dependency-groups]
@@ -20,6 +26,7 @@ dev = [
   "ruff>=0.7",
   "mypy>=1.13",
   "import-linter>=2.1",
+  "pytest-mock>=3.14",
 ]
 
 [build-system]
