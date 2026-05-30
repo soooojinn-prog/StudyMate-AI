@@ -27,6 +27,7 @@ dev = [
   "mypy>=1.13",
   "import-linter>=2.1",
   "pytest-mock>=3.14",
+  "reportlab>=4.2",
 ]
 
 [build-system]
@@ -53,6 +54,10 @@ warn_return_any = true
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["reportlab.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
