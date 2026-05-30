@@ -1,0 +1,53 @@
+[importlinter]
+root_package = app
+include_external_packages = True
+
+[importlinter:contract:1]
+name = api may only depend on agents, learning, eval, core
+type = forbidden
+source_modules =
+    app.api
+forbidden_modules =
+    app.rag
+
+[importlinter:contract:2]
+name = agents must not import api
+type = forbidden
+source_modules =
+    app.agents
+forbidden_modules =
+    app.api
+
+[importlinter:contract:3]
+name = rag must not import api, agents, learning, eval
+type = forbidden
+source_modules =
+    app.rag
+forbidden_modules =
+    app.api
+    app.agents
+    app.learning
+    app.eval
+
+[importlinter:contract:4]
+name = learning must not import api, agents, rag, eval
+type = forbidden
+source_modules =
+    app.learning
+forbidden_modules =
+    app.api
+    app.agents
+    app.rag
+    app.eval
+
+[importlinter:contract:5]
+name = core must not import any other app module
+type = forbidden
+source_modules =
+    app.core
+forbidden_modules =
+    app.api
+    app.agents
+    app.rag
+    app.learning
+    app.eval
