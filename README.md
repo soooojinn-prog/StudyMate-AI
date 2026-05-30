@@ -11,7 +11,9 @@
 [pnpm](https://pnpm.io/), GNU Make (선택).
 
 ```bash
+# 백엔드(.env)와 프론트엔드(frontend/.env.local)는 별도 파일에서 환경 변수를 읽습니다.
 cp .env.example .env
+cp frontend/.env.example frontend/.env.local
 make install
 
 # 옵션 A: 한 줄로 둘 다 띄우기 (Make 필요)
@@ -21,6 +23,9 @@ make dev
 #   Terminal 1: cd backend  && uv run uvicorn app.main:app --reload --port 8000
 #   Terminal 2: cd frontend && pnpm dev
 ```
+
+> Windows에서는 `cmd` 또는 Git Bash에서 Make를 실행하세요. PowerShell에서 Make
+> 가 인식되지 않으면 옵션 B를 사용하세요.
 
 접속:
 - 프론트엔드: <http://localhost:3000>

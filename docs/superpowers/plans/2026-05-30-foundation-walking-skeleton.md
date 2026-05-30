@@ -1068,21 +1068,35 @@ After push, open the Actions tab on GitHub and confirm both jobs pass. If a job 
 
 **Files:**
 - Create: `Makefile`
-- Create: `.env.example`
+- Create: `.env.example` (backend env vars only)
+- Create: `frontend/.env.example` (frontend env vars — Next.js does not read the project-root `.env`)
 - Create: `README.md`
 
-- [ ] **Step 1: Create `.env.example`** at the project root
+- [ ] **Step 1: Create `.env.example`** at the project root (backend only)
 
 ```bash
-# Backend environment variables
+# Backend environment variables (FastAPI / pydantic-settings).
+# Copy to .env at the project root: `cp .env.example .env`.
+# Frontend env vars live in `frontend/.env.example` (Next.js only reads
+# .env.local from the frontend/ directory, not from this file).
 APP_NAME=StudyMate AI
 ENVIRONMENT=development
 LOG_LEVEL=INFO
-# JSON list — used by FastAPI CORS middleware
+# JSON list -- used by FastAPI CORS middleware
 ALLOWED_ORIGINS=["http://localhost:3000"]
+```
 
-# Frontend — how the Next.js server-side fetches the backend
-# (For local development. Default is http://localhost:8000.)
+- [ ] **Step 1b: Create `frontend/.env.example`** (frontend only)
+
+```bash
+# Frontend environment variables (Next.js).
+# Copy to frontend/.env.local: `cp frontend/.env.example frontend/.env.local`.
+# Next.js auto-loads .env.local from this directory; the project-root .env
+# is not consulted by Next.
+
+# Backend URL the server-side render uses to fetch /health, /study, etc.
+# Default in code is http://localhost:8000, so this line is optional unless
+# you need to point at a different backend (e.g., a deployed staging API).
 BACKEND_URL=http://localhost:8000
 ```
 
@@ -1152,7 +1166,9 @@ ci-local: lint typecheck test
 [pnpm](https://pnpm.io/), GNU Make (선택).
 
 ```bash
+# 백엔드(.env)와 프론트엔드(frontend/.env.local)는 별도 파일에서 환경 변수를 읽습니다.
 cp .env.example .env
+cp frontend/.env.example frontend/.env.local
 make install
 
 # 옵션 A: 한 줄로 둘 다 띄우기 (Make 필요)
@@ -1162,6 +1178,9 @@ make dev
 #   Terminal 1: cd backend  && uv run uvicorn app.main:app --reload --port 8000
 #   Terminal 2: cd frontend && pnpm dev
 ```
+
+> Windows에서는 `cmd` 또는 Git Bash에서 Make를 실행하세요. PowerShell에서 Make
+> 가 인식되지 않으면 옵션 B를 사용하세요.
 
 접속:
 - 프론트엔드: <http://localhost:3000>
