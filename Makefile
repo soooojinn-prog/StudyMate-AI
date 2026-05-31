@@ -1,4 +1,4 @@
-.PHONY: help install dev dev-backend dev-frontend test lint typecheck ci-local
+.PHONY: help install dev dev-backend dev-frontend test lint typecheck ci-local seed seed-status seed-reset
 
 help:
 	@echo "StudyMate AI - common commands"
@@ -11,6 +11,9 @@ help:
 	@echo "  lint          run ruff + ruff format check + frontend lint"
 	@echo "  typecheck     run mypy + frontend typecheck"
 	@echo "  ci-local      run the same checks CI runs"
+	@echo "  seed          ingest data/raw/*.pdf into the RAG store"
+	@echo "  seed-status   show chunk count in the RAG collection"
+	@echo "  seed-reset    drop and recreate the RAG collection"
 
 install:
 	cd backend && uv sync
@@ -21,6 +24,15 @@ dev-backend:
 
 dev-frontend:
 	cd frontend && pnpm dev
+
+seed:
+	cd backend && uv run python -m scripts.seed all
+
+seed-status:
+	cd backend && uv run python -m scripts.seed status
+
+seed-reset:
+	cd backend && uv run python -m scripts.seed reset
 
 # Run both concurrently. Ctrl-C kills the make process which terminates children
 # via the shell. The `wait` keeps make alive while children run.
