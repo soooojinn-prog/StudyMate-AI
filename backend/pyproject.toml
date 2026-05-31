@@ -59,6 +59,14 @@ disallow_untyped_defs = false
 module = ["reportlab.*"]
 ignore_missing_imports = true
 
+# chromadb's own types are overly strict (rejects list[list[float]] for
+# embeddings, returns Optional containers from query()). Treat as untyped
+# external library — mirrors the reportlab override.
+[[tool.mypy.overrides]]
+module = ["chromadb.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 addopts = "-ra --strict-markers --cov=app --cov-report=term-missing"
