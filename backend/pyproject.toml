@@ -67,6 +67,11 @@ module = ["chromadb.*"]
 ignore_missing_imports = true
 follow_imports = "skip"
 
+# PyYAML ships no inline types; we don't pull in types-PyYAML stubs.
+[[tool.mypy.overrides]]
+module = ["yaml"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 addopts = "-ra --strict-markers --cov=app --cov-report=term-missing"
