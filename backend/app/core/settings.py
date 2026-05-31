@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     extracted_dir: Path = Field(default=Path("./data/extracted"))
     chunks_dir: Path = Field(default=Path("./data/chunks"))
 
+    # ── Agents ─────────────────────────────────────────────
+    studymate_db: Path = Field(default=Path("./data/studymate.db"))
+    anthropic_model_sonnet: str = Field(default="claude-sonnet-4-6")
+    anthropic_model_haiku: str = Field(default="claude-haiku-4-5")
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

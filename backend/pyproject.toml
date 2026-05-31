@@ -15,6 +15,8 @@ dependencies = [
   "anthropic>=0.39",
   "pyyaml>=6.0",
   "typer>=0.13",
+  "langgraph>=0.2.50",
+  "langchain-core>=0.3.20",
 ]
 
 [dependency-groups]
@@ -71,6 +73,16 @@ follow_imports = "skip"
 [[tool.mypy.overrides]]
 module = ["yaml"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "langgraph.*"
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "langchain_core.*"
+ignore_missing_imports = true
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
