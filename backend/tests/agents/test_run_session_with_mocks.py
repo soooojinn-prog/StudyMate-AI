@@ -3,6 +3,7 @@
 This is the most important test in Plan 3 — it verifies the entire
 graph flows correctly with the interrupt and resume cycle.
 """
+
 from __future__ import annotations
 
 import json
@@ -87,9 +88,7 @@ def test_run_then_resume_completes_full_cycle(tmp_path: Path) -> None:
     )
 
     # Phase 1: run until the AWAIT_ANSWER interrupt
-    state_at_pause = run_session(
-        graph=graph, user_id="u1", session_id="s1", target_count=5
-    )
+    state_at_pause = run_session(graph=graph, user_id="u1", session_id="s1", target_count=5)
     assert state_at_pause["topic"] == "정규화"
     assert state_at_pause["question"] == "정규화의 목적을 서술하시오."
     assert state_at_pause["ref_chunk_ids"] == ["c1", "c2"]

@@ -1,4 +1,5 @@
 """Tests for app.agents.nodes.persist — deterministic, no LLM."""
+
 from unittest.mock import MagicMock
 
 from app.agents.nodes.persist import persist_node

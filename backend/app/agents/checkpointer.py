@@ -4,6 +4,7 @@ Plan 5 will create the StudySession/QuestionInstance/Answer tables in
 the same SQLite file. LangGraph's checkpointer uses its own tables
 (`checkpoints`, `writes`, `versions`) so there's no collision.
 """
+
 from __future__ import annotations
 
 import sqlite3

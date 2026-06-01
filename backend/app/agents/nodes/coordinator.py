@@ -1,4 +1,5 @@
 """Coordinator node — decides (topic, difficulty, target_weakness)."""
+
 from __future__ import annotations
 
 import json
@@ -9,9 +10,7 @@ from app.agents.prompts import COORDINATOR_SYSTEM, coordinator_prompt
 from app.agents.state import SessionState
 
 
-def _call_haiku(
-    client: Any, model: str, system: str, user_message: str
-) -> str:
+def _call_haiku(client: Any, model: str, system: str, user_message: str) -> str:
     resp = client.messages.create(
         model=model,
         max_tokens=200,
@@ -21,9 +20,7 @@ def _call_haiku(
     return str(resp.content[0].text).strip()
 
 
-def _parse_decision(
-    raw: str, topics: list[str], weak_topics: list[str]
-) -> CoordinatorDecision:
+def _parse_decision(raw: str, topics: list[str], weak_topics: list[str]) -> CoordinatorDecision:
     try:
         data = json.loads(raw)
         decision = CoordinatorDecision.model_validate(data)

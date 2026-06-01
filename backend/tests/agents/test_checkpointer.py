@@ -1,4 +1,5 @@
 """Tests for app.agents.checkpointer."""
+
 from pathlib import Path
 
 from app.agents.checkpointer import make_checkpointer

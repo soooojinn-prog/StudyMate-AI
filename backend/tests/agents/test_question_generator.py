@@ -1,4 +1,5 @@
 """Tests for app.agents.nodes.question_generator."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,9 +15,7 @@ def _mock_retriever(chunk_ids: list[str], texts: list[str]):
             self.id = cid
             self.text = text
 
-    retriever.retrieve.return_value = [
-        _C(i, t) for i, t in zip(chunk_ids, texts, strict=True)
-    ]
+    retriever.retrieve.return_value = [_C(i, t) for i, t in zip(chunk_ids, texts, strict=True)]
     return retriever
 
 
@@ -53,9 +52,7 @@ def test_qgen_calls_retriever_with_topic(make_anthropic_client):
     )
     retriever = _mock_retriever(["c1"], ["chunk text"])
     state = {"user_id": "u1", "session_id": "s1", "topic": "SQL 응용", "difficulty": 1}
-    question_generator_node(
-        state, client=client, model="claude-sonnet-4-6", retriever=retriever
-    )
+    question_generator_node(state, client=client, model="claude-sonnet-4-6", retriever=retriever)
     retriever.retrieve.assert_called_once()
     call_args = retriever.retrieve.call_args
     # the query must mention the topic

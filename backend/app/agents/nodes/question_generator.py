@@ -1,4 +1,5 @@
 """QuestionGenerator node — RAG context + Sonnet → question + model_answer + rubric."""
+
 from __future__ import annotations
 
 import json
@@ -11,9 +12,7 @@ from app.agents.state import QuestionPayload, SessionState
 _RETRIEVAL_K = 5
 
 
-def _call_sonnet(
-    client: Any, model: str, system: str, user_message: str
-) -> str:
+def _call_sonnet(client: Any, model: str, system: str, user_message: str) -> str:
     resp = client.messages.create(
         model=model,
         max_tokens=1500,

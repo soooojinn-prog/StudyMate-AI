@@ -2,6 +2,7 @@
 
 These verify edges and interrupt placement without invoking any LLM.
 """
+
 from unittest.mock import MagicMock
 
 from app.agents.checkpointer import make_checkpointer

@@ -5,6 +5,7 @@ happens in Plan 5 by wiring a `PersistAdapter` callable that receives the
 payload built here. In Plan 3, the adapter is None — the graph still
 runs end-to-end, the session state just doesn't outlive the process.
 """
+
 from __future__ import annotations
 
 from typing import Any, Protocol
@@ -13,8 +14,7 @@ from typing import Any, Protocol
 class PersistAdapter(Protocol):
     """Plan 5 will implement this against SQLAlchemy. Plan 3 uses None or a Mock."""
 
-    def __call__(self, payload: dict[str, Any]) -> None:
-        ...
+    def __call__(self, payload: dict[str, Any]) -> None: ...
 
 
 def persist_node(

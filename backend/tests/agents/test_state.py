@@ -1,4 +1,5 @@
 """Tests for app.agents.state."""
+
 import pytest
 from pydantic import ValidationError
 

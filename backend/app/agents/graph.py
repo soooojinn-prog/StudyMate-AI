@@ -8,6 +8,7 @@ so the graph pauses after QuestionGenerator and before Grader runs. The
 API layer (Plan 4) collects the learner's answer, writes it into state,
 then calls `resume_session(thread_id, user_answer)`.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

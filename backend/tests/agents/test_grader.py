@@ -1,4 +1,5 @@
 """Tests for app.agents.nodes.grader."""
+
 from app.agents.nodes.grader import grader_node
 
 
@@ -33,12 +34,7 @@ def test_grader_retries_once_on_malformed_then_falls_back(make_anthropic_client)
     good = type(
         "R",
         (),
-        {
-            "text": (
-                '{"score": 0.7, "rationale": "ok", '
-                '"feedback": "ok", "missing_points": []}'
-            )
-        },
+        {"text": ('{"score": 0.7, "rationale": "ok", "feedback": "ok", "missing_points": []}')},
     )()
     client.messages.create.side_effect = [
         type("M", (), {"content": [bad]})(),

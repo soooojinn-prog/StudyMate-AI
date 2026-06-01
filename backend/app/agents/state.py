@@ -1,4 +1,5 @@
 """Shared graph state and nested value objects."""
+
 from __future__ import annotations
 
 from typing import TypedDict

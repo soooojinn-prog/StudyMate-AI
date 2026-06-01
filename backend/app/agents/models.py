@@ -4,6 +4,7 @@ These are distinct from `state.py` because LLM outputs need strict
 schema validation; SessionState (TypedDict) is more permissive to keep
 LangGraph happy.
 """
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field

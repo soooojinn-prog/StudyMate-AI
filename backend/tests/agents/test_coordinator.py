@@ -1,4 +1,5 @@
 """Tests for app.agents.nodes.coordinator."""
+
 from app.agents.nodes.coordinator import coordinator_node
 
 
@@ -26,9 +27,7 @@ def test_coordinator_returns_topic_difficulty_target(make_anthropic_client, topi
     assert result["target_weakness"] is True
 
 
-def test_coordinator_falls_back_when_topic_not_in_allowlist(
-    make_anthropic_client, topics_default
-):
+def test_coordinator_falls_back_when_topic_not_in_allowlist(make_anthropic_client, topics_default):
     client = make_anthropic_client(
         {"topic": "존재하지않는주제", "difficulty": 2, "target_weakness": False, "reason": "?"}
     )

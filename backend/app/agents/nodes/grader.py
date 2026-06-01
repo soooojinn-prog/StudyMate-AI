@@ -1,4 +1,5 @@
 """Grader node — strict JSON, 1 retry, half-score fallback."""
+
 from __future__ import annotations
 
 import json
@@ -12,9 +13,7 @@ _RETRY_LIMIT = 1
 _FALLBACK_SCORE = 0.5
 
 
-def _call_sonnet(
-    client: Any, model: str, system: str, user_message: str
-) -> str:
+def _call_sonnet(client: Any, model: str, system: str, user_message: str) -> str:
     resp = client.messages.create(
         model=model,
         max_tokens=1200,
