@@ -13,6 +13,7 @@ from app.api.schemas.sessions import (
     CreateSessionRequest,
     RubricItemDTO,
     SessionStateDTO,
+    SubmitAnswerRequest,
 )
 from app.api.session_store import SessionRecord
 
@@ -83,3 +84,29 @@ def create_session(
     }
     raw_state = graph.invoke(initial, config=config) or {}
     return _state_to_dto(raw=raw_state, record=record, status_label="awaiting_answer")
+
+
+@router.post(
+    "/{session_id}/answer",
+    response_model=SessionStateDTO,
+    status_code=status.HTTP_200_OK,
+)
+def submit_answer(
+    session_id: str,
+    body: SubmitAnswerRequest,
+    graph: GraphDep,
+    store: SessionStoreDep,
+) -> SessionStateDTO:
+    if graph is None:
+        raise HTTPException(
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            detail="agent_graph_unavailable — set ANTHROPIC_API_KEY and restart",
+        )
+    record = store.get(session_id)
+    if record is None:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="session_not_found")
+
+    config = {"configurable": {"thread_id": session_id}}
+    graph.update_state(config, {"user_answer": body.user_answer})
+    raw_state = graph.invoke(None, config=config) or {}
+    return _state_to_dto(raw=raw_state, record=record, status_label="graded")
