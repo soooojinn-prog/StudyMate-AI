@@ -5,7 +5,6 @@
 const DEFAULT_BACKEND_URL = "http://localhost:8000";
 
 function backendUrl(): string {
-  // BACKEND_URL is set in .env.local for dev. Falls back to localhost.
   return process.env.BACKEND_URL ?? DEFAULT_BACKEND_URL;
 }
 
@@ -15,10 +14,69 @@ export type HealthPayload = {
   version: string;
 };
 
-export async function fetchHealth(): Promise<HealthPayload> {
-  const res = await fetch(`${backendUrl()}/health`, { cache: "no-store" });
+export type RubricItem = {
+  point: string;
+  weight: number;
+  keywords: string[];
+};
+
+export type SessionState = {
+  session_id: string;
+  user_id: string;
+  status: "awaiting_answer" | "graded" | "completed";
+  topic: string | null;
+  difficulty: number | null;
+  target_weakness: boolean | null;
+  question: string | null;
+  model_answer: string | null;
+  rubric: RubricItem[];
+  ref_chunk_ids: string[];
+  user_answer: string | null;
+  score: number | null;
+  rationale: string | null;
+  feedback: string | null;
+  missing_points: string[];
+  questions_done: number;
+  target_count: number;
+  created_at: string;
+};
+
+async function _json<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, { cache: "no-store", ...init });
   if (!res.ok) {
-    throw new Error(`Backend /health responded ${res.status}`);
+    const detail = await res.text();
+    throw new Error(`${res.status} ${res.statusText}: ${detail}`);
   }
-  return (await res.json()) as HealthPayload;
+  return (await res.json()) as T;
+}
+
+export async function fetchHealth(): Promise<HealthPayload> {
+  return _json<HealthPayload>(`${backendUrl()}/health`);
+}
+
+export async function createSession(opts?: {
+  user_id?: string;
+  target_count?: number;
+  user_intent?: string;
+}): Promise<SessionState> {
+  return _json<SessionState>(`${backendUrl()}/sessions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(opts ?? {}),
+  });
+}
+
+export async function submitAnswer(
+  sessionId: string,
+  user_answer: string,
+): Promise<SessionState> {
+  return _json<SessionState>(`${backendUrl()}/sessions/${sessionId}/answer`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ user_answer }),
+  });
+}
+
+export async function getSession(sessionId: string): Promise<SessionState> {
+  return _json<SessionState>(`${backendUrl()}/sessions/${sessionId}`);
 }
