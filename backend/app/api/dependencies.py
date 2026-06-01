@@ -17,13 +17,36 @@ from app.learning.database import get_session as _make_session
 
 
 def _build_graph_singleton() -> Any:
-    """Construct the agent graph for the API singleton.
+    """Construct the agent graph for the API singleton with DB-backed
+    PersistAdapter and WeaknessProvider.
 
     Delegates to `app.agents.wiring.build_default_graph` so the API
     layer doesn't itself import `app.rag` (would break import-linter
     contract 1).
     """
-    return build_default_graph()
+
+    def _persist(payload: dict[str, Any]) -> None:
+        from app.learning.database import session_scope  # noqa: PLC0415
+        from app.learning.repository import SessionRepository  # noqa: PLC0415
+
+        with session_scope() as sess:
+            SessionRepository(sess).record_answer(payload)
+
+    def _weakness(user_id: str) -> list[str]:
+        from app.learning.analytics import compute_weakness  # noqa: PLC0415
+        from app.learning.database import session_scope  # noqa: PLC0415
+        from app.learning.repository import SessionRepository  # noqa: PLC0415
+
+        with session_scope() as sess:
+            weak = compute_weakness(
+                SessionRepository(sess), user_id=user_id, lookback_days=30
+            )
+            return [w.topic for w in weak]
+
+    return build_default_graph(
+        persist_adapter=_persist,
+        weakness_provider=_weakness,
+    )
 
 
 def get_graph(request: Request) -> Any:
