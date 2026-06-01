@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     extracted_dir: Path = Field(default=_PROJECT_ROOT / "data" / "extracted")
     chunks_dir: Path = Field(default=_PROJECT_ROOT / "data" / "chunks")
 
+    # ── Database ───────────────────────────────────────────
+    database_url: str = Field(
+        default_factory=lambda: f"sqlite:///{_PROJECT_ROOT / 'data' / 'studymate.db'}"
+    )
+
     # ── Agents ─────────────────────────────────────────────
     studymate_db: Path = Field(default=_PROJECT_ROOT / "data" / "studymate.db")
     anthropic_model_sonnet: str = Field(default="claude-sonnet-4-6")

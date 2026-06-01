@@ -18,6 +18,8 @@ dependencies = [
   "langgraph>=0.2.50",
   "langgraph-checkpoint-sqlite>=2.0",
   "langchain-core>=0.3.20",
+  "sqlalchemy>=2.0.36",
+  "alembic>=1.14.0",
 ]
 
 [dependency-groups]
