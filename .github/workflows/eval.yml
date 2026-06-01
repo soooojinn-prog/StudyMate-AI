@@ -1,0 +1,61 @@
+name: eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Run tag (manual, release-vN, ...)"
+        required: false
+        default: "manual"
+
+jobs:
+  eval:
+    name: Run eval harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.5.4"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          STUDYMATE_DB: ${{ github.workspace }}/data/studymate.db
+          EMBEDDING_MODEL: BAAI/bge-m3
+          CHROMA_DIR: ${{ github.workspace }}/chroma
+          TOPICS_FILE: ${{ github.workspace }}/data/topics.yaml
+        run: uv run python -m scripts.eval run --tag "${{ inputs.tag }}"
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report-${{ inputs.tag }}-${{ github.run_id }}
+          path: data/eval/reports/
+          retention-days: 90
+
+      - name: Commit history.csv
+        if: success()
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/eval/reports/history.csv
+          git diff --cached --quiet || git commit -m "chore(eval): append history.csv from manual eval (tag=${{ inputs.tag }})"
+          git push
