@@ -29,3 +29,30 @@ def coordinator_prompt(
   "target_weakness": <true if 약점 보강 목적이면, else false>,
   "reason": "<한 문장 근거>"
 }}"""
+
+
+QGEN_SYSTEM = (
+    "당신은 한국 정보처리기사 실기 시험 출제자입니다. 주어진 학습 자료를 바탕으로 "
+    "서술형 문제 한 개와 모범답안, 그리고 채점 루브릭(3~5개 항목)을 동시에 생성합니다. "
+    "응답은 반드시 JSON만 출력하세요."
+)
+
+
+def qgen_prompt(topic: str, difficulty: int, context_chunks: list[str]) -> str:
+    context = "\n\n".join(f"[자료 {i + 1}]\n{c}" for i, c in enumerate(context_chunks))
+    return f"""주제: {topic}
+난이도: {difficulty} (1=쉬움, 2=보통, 3=어려움)
+
+참고 자료:
+{context}
+
+다음 JSON 형식으로만 응답하시오:
+{{
+  "question": "<서술형 문제 한 문장>",
+  "model_answer": "<모범답안 3~5문장>",
+  "rubric": [
+    {{"point": "<채점 기준>", "weight": <0~1>, "keywords": ["<키워드>", ...]}}
+  ]
+}}
+
+루브릭 가중치 합은 1.0이 되어야 합니다."""
