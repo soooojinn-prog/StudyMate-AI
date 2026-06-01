@@ -40,6 +40,10 @@ def create_app() -> FastAPI:
     from app.api.routes import sessions  # noqa: PLC0415 (local import to avoid circular dep)
 
     app.include_router(sessions.router)
+
+    from app.api.routes import dashboard  # noqa: PLC0415
+
+    app.include_router(dashboard.router)
     return app
 
 

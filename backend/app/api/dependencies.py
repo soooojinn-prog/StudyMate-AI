@@ -9,9 +9,11 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastapi import Depends, Request
+from sqlalchemy.orm import Session
 
 from app.agents.wiring import build_default_graph
 from app.api.session_store import SessionStore
+from app.learning.database import get_session as _make_session
 
 
 def _build_graph_singleton() -> Any:
@@ -35,5 +37,10 @@ def get_session_store(request: Request) -> SessionStore:
     return store
 
 
+def get_db_session() -> Session:
+    return _make_session()
+
+
 GraphDep = Annotated[Any, Depends(get_graph)]
 SessionStoreDep = Annotated[SessionStore, Depends(get_session_store)]
+DbSessionDep = Annotated[Session, Depends(get_db_session)]
