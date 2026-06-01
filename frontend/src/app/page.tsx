@@ -16,9 +16,12 @@ export default function HomePage() {
         + RAG로 학습자 답안을 의미 기반으로 채점하고 근거 청크와 함께
         보강 가이드를 제공합니다.
       </p>
-      <div className="mt-10 flex gap-3">
+      <div className="mt-10 flex gap-3 flex-wrap">
         <Button asChild>
           <Link href="/study">학습 시작 →</Link>
+        </Button>
+        <Button variant="ghost" asChild>
+          <Link href="/dashboard">대시보드</Link>
         </Button>
         <Button variant="ghost" asChild>
           <Link href="/health">시스템 상태</Link>

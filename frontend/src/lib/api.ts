@@ -80,3 +80,36 @@ export async function submitAnswer(
 export async function getSession(sessionId: string): Promise<SessionState> {
   return _json<SessionState>(`${backendUrl()}/sessions/${sessionId}`);
 }
+
+export type WeakTopic = {
+  topic: string;
+  avg_score: number;
+  sample_count: number;
+};
+
+export type TopicStat = {
+  topic: string;
+  answer_count: number;
+  avg_score: number;
+};
+
+export type RecentAnswer = {
+  session_id: string;
+  topic: string;
+  score: number;
+  graded_at: string;
+};
+
+export type DashboardStats = {
+  user_id: string;
+  weak_topics: WeakTopic[];
+  topic_stats: TopicStat[];
+  recent_answers: RecentAnswer[];
+  total_answers: number;
+};
+
+export async function fetchDashboardStats(userId: string): Promise<DashboardStats> {
+  const url = new URL(`${backendUrl()}/dashboard/stats`);
+  url.searchParams.set("user_id", userId);
+  return _json<DashboardStats>(url.toString());
+}
