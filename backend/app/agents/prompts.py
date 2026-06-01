@@ -56,3 +56,42 @@ def qgen_prompt(topic: str, difficulty: int, context_chunks: list[str]) -> str:
 }}
 
 루브릭 가중치 합은 1.0이 되어야 합니다."""
+
+
+GRADER_SYSTEM = (
+    "당신은 한국 정보처리기사 실기 시험 채점자입니다. "
+    "주어진 루브릭에 따라 학습자 답안을 항목별로 채점하고, "
+    "각 항목의 일치 여부와 부분점수를 합산해 최종 점수(0~1)를 산정합니다. "
+    "응답은 반드시 JSON만 출력하세요."
+)
+
+
+def grader_prompt(
+    question: str,
+    model_answer: str,
+    rubric: list[dict[str, object]],
+    user_answer: str,
+) -> str:
+    rubric_str = "\n".join(
+        f"{i + 1}. {r['point']} (가중치 {r['weight']}, 키워드 {r.get('keywords', [])})"
+        for i, r in enumerate(rubric)
+    )
+    return f"""문제: {question}
+
+모범답안: {model_answer}
+
+루브릭:
+{rubric_str}
+
+학습자 답안:
+\"\"\"
+{user_answer}
+\"\"\"
+
+JSON으로만 응답하시오:
+{{
+  "score": <0.0~1.0>,
+  "rationale": "<루브릭 항목별 채점 근거 한 문단>",
+  "feedback": "<학습자에게 줄 보강 가이드 한 문단>",
+  "missing_points": ["<빠진 키워드 또는 핵심 개념>", ...]
+}}"""
