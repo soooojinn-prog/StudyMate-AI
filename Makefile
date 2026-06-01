@@ -1,4 +1,4 @@
-.PHONY: help install dev dev-backend dev-frontend test lint typecheck ci-local seed seed-status seed-reset
+.PHONY: help install dev dev-backend dev-frontend test lint typecheck ci-local seed seed-status seed-reset eval eval-mock eval-latest
 
 help:
 	@echo "StudyMate AI - common commands"
@@ -14,6 +14,9 @@ help:
 	@echo "  seed          ingest data/raw/*.pdf into the RAG store"
 	@echo "  seed-status   show chunk count in the RAG collection"
 	@echo "  seed-reset    drop and recreate the RAG collection"
+	@echo "  eval          run eval with real Anthropic + RAG (costs ~$$0.50)"
+	@echo "  eval-mock     run eval with fake grader + retriever (no API)"
+	@echo "  eval-latest   print latest history.csv row"
 
 install:
 	cd backend && uv sync
@@ -33,6 +36,15 @@ seed-status:
 
 seed-reset:
 	cd backend && uv run python -m scripts.seed reset
+
+eval:
+	cd backend && uv run python -m scripts.eval run
+
+eval-mock:
+	cd backend && uv run python -m scripts.eval mock
+
+eval-latest:
+	cd backend && uv run python -m scripts.eval show-latest
 
 # Run both concurrently. Ctrl-C kills the make process which terminates children
 # via the shell. The `wait` keeps make alive while children run.

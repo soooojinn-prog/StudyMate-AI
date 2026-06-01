@@ -37,6 +37,10 @@ chroma/
 eval/reports/*.html
 !eval/reports/.gitkeep
 
+# Eval HTML reports are large + transient; only history.csv is tracked
+data/eval/reports/*.html
+!data/eval/reports/.gitkeep
+
 # IDE / OS
 .vscode/
 .idea/
