@@ -6,14 +6,23 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.dependencies import _build_graph_singleton
 from app.api.routes import health
+from app.api.session_store import SessionStore
 from app.core.logging import configure_logging
 from app.core.settings import settings
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     configure_logging(settings.log_level)
+    app.state.session_store = SessionStore()
+    # Defer expensive graph build until a real ANTHROPIC_API_KEY is configured.
+    # Tests inject their own graph via dependency overrides.
+    if settings.anthropic_api_key:
+        app.state.graph = _build_graph_singleton()
+    else:
+        app.state.graph = None
     yield
 
 
