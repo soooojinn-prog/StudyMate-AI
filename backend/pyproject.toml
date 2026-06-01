@@ -16,6 +16,7 @@ dependencies = [
   "pyyaml>=6.0",
   "typer>=0.13",
   "langgraph>=0.2.50",
+  "langgraph-checkpoint-sqlite>=2.0",
   "langchain-core>=0.3.20",
 ]
 
