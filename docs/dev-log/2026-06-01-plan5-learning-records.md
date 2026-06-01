@@ -1,7 +1,7 @@
 # Plan 5 — Learning Records & Dashboard (진행 중)
 
 - **기간**: 2026-06-01 ~ (진행 중)
-- **상태**: 8 tasks 중 1 완료
+- **상태**: 8 tasks 중 7 완료 — Task 8 E2E는 ANTHROPIC credit 후 사용자 액션 대기
 - **결과물 (예정)**: 모든 graded 답변이 SQLite에 저장 + 약점 Top-3 자동 산출 + `/dashboard` 페이지에서 topic 통계 + 최근 답변 렌더링. agent 그래프의 PersistAdapter + WeaknessProvider가 실 DB와 연동.
 
 ---
@@ -17,7 +17,13 @@
 | 시점 | 누적 테스트 수 | 비고 |
 |---|---|---|
 | Task 0 (Plan 4 종료) | 93 | 베이스라인 |
-| Task 1 완료 | 97 (rag 96 → 97 with subprocess tests) | SQLAlchemy 2.0 + Alembic + 4 declarative models (User/StudySession/QuestionInstance/Answer) + 0001 migration + 4 round-trip/cascade/uniq tests |
+| Task 1 완료 | 97 | SQLAlchemy 2.0 + Alembic + 4 declarative models (User/StudySession/QuestionInstance/Answer) + 0001 migration + 4 round-trip/cascade/uniq tests |
+| Task 2 완료 | 101 | SessionRepository.record_answer (autoflush fix) + recent_answers (joined query, user/lookback filter) + 4 tests |
+| Task 3 완료 | 105 | compute_weakness deterministic Top-3, ≥3 samples 요구, frozen dataclass + 4 ranking tests |
+| Task 4 완료 | 105 | __init__.py 공개 surface 재수출 (SessionRepository, TopicWeakness, compute_weakness, get_session, session_scope) |
+| Task 5 완료 | 107 | DTOs (WeakTopic/TopicStat/RecentAnswer/DashboardStats) + DbSessionDep + GET /dashboard/stats endpoint + 2 tests |
+| Task 6 완료 | 107 | _build_graph_singleton wiring — PersistAdapter는 session_scope+record_answer, WeaknessProvider는 compute_weakness 호출 |
+| Task 7 완료 | 107 | /dashboard 페이지 (server component, 3 sections: 약점 Top-3, 주제 통계, 최근 답변 10건) + 랜딩 페이지 대시보드 링크 |
 
 ### 누적 commits (Plan 5)
 
@@ -25,6 +31,12 @@
 |---|---|
 | 1 | `d54feb9 feat(learning): add SQLAlchemy models + Alembic migration for session records` |
 | 1+fix | `2cb0b03 fix(api): move RAG wiring into app.agents.wiring to honor api->rag contract` |
+| 2 | `cf06e63 feat(learning): add SessionRepository.record_answer + recent_answers` |
+| 3 | `5b58cbb feat(learning): add deterministic compute_weakness (Top-3 by avg score)` |
+| 4 | `404ec75 feat(learning): export SessionRepository + compute_weakness public surface` |
+| 5 | `51eb06b feat(api): add GET /dashboard/stats endpoint` |
+| 6 | `c6ce2d1 feat(learning): wire PersistAdapter + WeaknessProvider into agent graph` |
+| 7 | `0d3bccc feat(frontend): add /dashboard page with weak topics, topic stats, recent answers` |
 
 ---
 
