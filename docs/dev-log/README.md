@@ -10,7 +10,8 @@
 | `2026-05-30-plan1-foundation.md` | Plan 1 회고 — 메트릭, 의사결정, 트러블슈팅 |
 | `2026-05-30-plan2-rag.md` | Plan 2 — task별 메트릭, 트러블슈팅 (Task 1-11 완료, 12 보류) |
 | `2026-06-01-plan3-langgraph.md` | Plan 3 **완료** ✅ — LangGraph + 3 agents + 보안 패치 |
-| `2026-06-01-plan4-study-ui.md` | Plan 4 진행 중 — Study UI + API (Architectural Dark) |
+| `2026-06-01-plan4-study-ui.md` | Plan 4 코드 완료 (9/10) — Study UI + API (Architectural Dark) |
+| `2026-06-01-plan5-learning-records.md` | Plan 5 진행 중 — SQLAlchemy + 약점 분석 + Dashboard |
 | (추후) `2026-XX-XX-plan4-study-ui.md` | Plan 4 Study UI |
 | ... | ... |
 
