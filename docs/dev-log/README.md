@@ -11,7 +11,8 @@
 | `2026-05-30-plan2-rag.md` | Plan 2 — task별 메트릭, 트러블슈팅 (Task 1-11 완료, 12 보류) |
 | `2026-06-01-plan3-langgraph.md` | Plan 3 **완료** ✅ — LangGraph + 3 agents + 보안 패치 |
 | `2026-06-01-plan4-study-ui.md` | Plan 4 코드 완료 (9/10) — Study UI + API (Architectural Dark) |
-| `2026-06-01-plan5-learning-records.md` | Plan 5 진행 중 — SQLAlchemy + 약점 분석 + Dashboard |
+| `2026-06-01-plan5-learning-records.md` | Plan 5 코드 완료 (7/8) — SQLAlchemy + 약점 분석 + Dashboard |
+| `2026-06-01-plan6-eval-ci.md` | Plan 6 진행 중 — Eval harness + 3 metrics + CI |
 | (추후) `2026-XX-XX-plan4-study-ui.md` | Plan 4 Study UI |
 | ... | ... |
 
