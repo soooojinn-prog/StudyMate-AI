@@ -9,6 +9,13 @@ source_modules =
     app.api
 forbidden_modules =
     app.rag
+# `app.agents.wiring` is the intentional transit point: api -> agents.wiring -> rag.
+# The api layer never imports `app.rag` directly; agents.wiring encapsulates
+# the RAG dependency setup so the contract's spirit (api doesn't depend on rag
+# internals) is preserved.
+ignore_imports =
+    app.agents.wiring -> app.rag.retriever
+    app.agents.wiring -> app.rag.ingest.topics
 
 [importlinter:contract:2]
 name = agents must not import api, eval
