@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>StudyMate Eval — {{ report.config.tag or report.config.git_sha }}</title>
+  <style>
+    :root {
+      --bg: #0b0e15; --panel: #141826; --panel-line: #262d3e;
+      --ink: #f1f3f8; --ink-mid: #b4bbcb; --ink-soft: #828a9d;
+      --cyan: #7fe2ec; --amber: #f3bd6f; --danger: #f47878;
+    }
+    * { box-sizing: border-box; }
+    body { background: var(--bg); color: var(--ink); font-family: -apple-system, "Pretendard Variable", sans-serif; padding: 40px; max-width: 1100px; margin: 0 auto; }
+    h1 { font-style: italic; font-size: 48px; letter-spacing: -0.02em; margin: 0; }
+    .meta { font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); margin: 8px 0 32px; border-bottom: 1px solid var(--panel-line); padding-bottom: 12px; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
+    .card { border: 1px solid var(--panel-line); padding: 22px; background: linear-gradient(180deg, var(--panel), rgba(20,24,38,0.4)); }
+    .card .label { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--ink-soft); }
+    .card .value { font-size: 56px; line-height: 1; margin: 12px 0 4px; font-style: italic; }
+    .card.pass .value { color: var(--cyan); }
+    .card.fail .value { color: var(--danger); }
+    .card .target { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-mid); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--panel-line); padding: 8px 12px; text-align: left; }
+    th { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); }
+    tr.miss td { color: var(--amber); }
+  </style>
+</head>
+<body>
+  <h1>StudyMate Eval</h1>
+  <p class="meta">
+    {{ report.timestamp_iso }} · {{ report.config.git_sha }}
+    {% if report.config.tag %} · {{ report.config.tag }}{% endif %}
+    · {{ report.case_count }} cases / {{ report.item_count }} items
+  </p>
+
+  <div class="metrics">
+    <div class="card {{ 'pass' if report.grading_accuracy >= 0.80 else 'fail' }}">
+      <div class="label">Grading Accuracy</div>
+      <div class="value">{{ "%.2f"|format(report.grading_accuracy * 100) }}%</div>
+      <div class="target">target ≥ 80% · tolerance ±0.15</div>
+    </div>
+    <div class="card {{ 'pass' if report.retrieval_recall_at_5 >= 0.75 else 'fail' }}">
+      <div class="label">Retrieval Recall@5</div>
+      <div class="value">{{ "%.2f"|format(report.retrieval_recall_at_5 * 100) }}%</div>
+      <div class="target">target ≥ 75%</div>
+    </div>
+    <div class="card {{ 'pass' if report.latency_p95 <= 8.0 else 'fail' }}">
+      <div class="label">Latency p95</div>
+      <div class="value">{{ "%.2f"|format(report.latency_p95) }}s</div>
+      <div class="target">target ≤ 8s · p50 {{ "%.2f"|format(report.latency_p50) }}s</div>
+    </div>
+  </div>
+
+  <h2>Per-Case Detail</h2>
+  <table>
+    <thead><tr><th>Item</th><th>Topic</th><th>Tier</th><th>Predicted</th><th>Human</th><th>|Δ|</th></tr></thead>
+    <tbody>
+    {% for c in report.per_case %}
+      <tr class="{{ 'miss' if c.delta > 0.15 else '' }}">
+        <td>{{ c.item_id }}</td>
+        <td>{{ c.topic }}</td>
+        <td>{{ c.tier }}</td>
+        <td>{{ "%.2f"|format(c.predicted_score) }}</td>
+        <td>{{ "%.2f"|format(c.human_score) }}</td>
+        <td>{{ "%.2f"|format(c.delta) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
