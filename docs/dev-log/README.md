@@ -8,8 +8,9 @@
 | 파일 | 내용 |
 |---|---|
 | `2026-05-30-plan1-foundation.md` | Plan 1 회고 — 메트릭, 의사결정, 트러블슈팅 |
-| `2026-05-30-plan2-rag.md` | Plan 2 진행 중 — task별 메트릭, 트러블슈팅 (append만) |
-| (추후) `2026-XX-XX-plan3-langgraph.md` | Plan 3 LangGraph |
+| `2026-05-30-plan2-rag.md` | Plan 2 — task별 메트릭, 트러블슈팅 (Task 1-11 완료, 12 보류) |
+| `2026-06-01-plan3-langgraph.md` | Plan 3 **완료** ✅ — LangGraph + 3 agents + 보안 패치 |
+| (추후) `2026-XX-XX-plan4-study-ui.md` | Plan 4 Study UI (v2 Architectural Dark 디자인 적용) |
 | (추후) `2026-XX-XX-plan4-study-ui.md` | Plan 4 Study UI |
 | ... | ... |
 
