@@ -1,7 +1,7 @@
 # Plan 4 — Study UI & API (진행 중)
 
 - **기간**: 2026-06-01 ~ (진행 중)
-- **상태**: 10 tasks 중 0 완료
+- **상태**: 10 tasks 중 9 완료 (Tasks 1-9 코드 완료, Task 10 E2E는 ANTHROPIC_API_KEY credit 충전 후 사용자 액션 대기)
 - **결과물 (예정)**: 브라우저 `/study` 페이지에서 세션 시작 → 문제 → 답안 입력 → 채점 결과 카드까지 Architectural-Dark 디자인으로 작동
 
 ---
@@ -21,11 +21,29 @@
 | 시점 | 누적 테스트 수 | 비고 |
 |---|---|---|
 | Task 0 (Plan 3 종료) | 76 | 베이스라인 |
+| Task 1 완료 | 82 | DTOs (CreateSessionRequest/SessionStateDTO/SubmitAnswerRequest) + thread-safe SessionStore + 6 tests |
+| Task 2 완료 | 82 | dependencies.py (Depends() factories + lifespan graph singleton) + main.py lifespan |
+| Task 3 완료 | 86 | POST /sessions (mocked-graph TDD) + 4 tests |
+| Task 4 완료 | 90 | POST /sessions/{id}/answer + 4 tests |
+| Task 5 완료 | 92 | GET /sessions/{id} snapshot + 2 tests |
+| Task 6 완료 | 93 | Full /sessions lifecycle 통합 테스트 (POST→POST→GET) + 1 test |
+| Task 7 완료 | 93 | Frontend shadcn 4 primitives (Button/Textarea/Badge/Card) + Architectural-Dark Tailwind 토큰 + globals.css |
+| Task 8 완료 | 93 | lib/api.ts 확장 (SessionState type + createSession/submitAnswer/getSession) |
+| Task 9 완료 | 93 | /study page (server: createSession) + SessionView client (Architectural-Dark, 답안 입력 → 채점 결과 카드) + 랜딩 페이지 update |
 
 ### 누적 commits (Plan 4)
 
 | Task | commit |
 |---|---|
+| 1 | `936ad75 feat(api): add session DTOs and in-memory session store` |
+| 2 | `ec69476 feat(api): wire graph + session store as FastAPI singletons via lifespan` |
+| 3 | `f1c7cb0 feat(api): add POST /sessions endpoint with mocked-graph TDD` |
+| 4 | `ec1027b feat(api): add POST /sessions/{id}/answer endpoint` |
+| 5 | `18e33cf feat(api): add GET /sessions/{id} snapshot endpoint` |
+| 6 | `907cead test(api): full /sessions create->answer->get flow with mocked graph` |
+| 7 | `4cf3744 feat(frontend): add shadcn primitives + Architectural-Dark tokens` |
+| 8 | `d1360eb feat(frontend): add session API client wrappers (createSession, submitAnswer, getSession)` |
+| 9 | `49977bf feat(frontend): add /study page with Architectural-Dark session view` |
 
 ---
 
