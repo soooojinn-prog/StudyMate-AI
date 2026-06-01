@@ -48,10 +48,32 @@ make dev
 ## 디렉토리 구조
 
 ```
-backend/   # FastAPI + LangGraph (Plan 3에서 추가) + RAG (Plan 2)
-frontend/  # Next.js 14 + Tailwind
-docs/      # specs, plans, ADR
+backend/   # FastAPI + LangGraph (Plan 3) + RAG (Plan 2) + Learning (Plan 5) + Eval (Plan 6)
+frontend/  # Next.js 14 + Tailwind + Architectural-Dark 디자인 (Plan 4)
+docs/      # specs, plans, ADR, design-explorations, dev-log
 ```
+
+## 구현 현황 (Plans 1-6 완료, Plan 7 선택)
+
+| Plan | 결과물 | 상태 |
+|---|---|---|
+| 1. Foundation | 모듈러 모놀리식 + import-linter + ruff/mypy + CI | ✅ |
+| 2. RAG | pdfplumber + BGE-M3 + ChromaDB + topic tagger | ✅ (Task 12 E2E 사용자 액션) |
+| 3. LangGraph | Coordinator(Haiku) + QuestionGenerator(Sonnet) + Grader(Sonnet) + HITL | ✅ |
+| 4. Study UI | FastAPI 세션 API + Next.js /study (Architectural-Dark) | ✅ (Task 10 E2E 사용자 액션) |
+| 5. Learning Records | SQLAlchemy + Alembic + 약점 분석 + /dashboard | ✅ (Task 8 E2E 사용자 액션) |
+| 6. Eval & CI | 골든셋 + 3 메트릭 + Jinja2 HTML 리포트 + typer CLI + workflow_dispatch | ✅ (Task 8 manual trigger 사용자 액션) |
+| 7. Polish + Docker | 선택적 컨테이너화 + 운영 관측성 | 미시작 |
+
+- **누적 테스트**: 135 (백엔드 pytest)
+- **import-linter**: 5/5 contracts kept
+- **ruff (E,F,I,B,UP,SIM,RET,PL,PT) + mypy strict + import-linter** 통합 품질 게이트
+- **Architectural-Dark 디자인** — Fraunces italic + JetBrains Mono + Pretendard, 깊은 navy + cyan + amber 액센트
+
+자세한 내용:
+- 면접·이력서 답변 키트: `docs/dev-log/INTERVIEW_POINTS.md`
+- Plan별 회고/메트릭/트러블슈팅: `docs/dev-log/`
+- 디자인 결정 ADR: `docs/design-explorations/DECISION.md`
 
 ## 모듈 경계 (백엔드)
 

@@ -11,10 +11,13 @@
 > 정보처리기사 실기 시험을 도메인으로 한 멀티 에이전트 학습 시스템 — FastAPI +
 > LangGraph + RAG. Coordinator(Haiku) + QuestionGenerator(Sonnet) + Grader(Sonnet)
 > 3개 에이전트가 `interrupt_before`로 학습자 답변을 기다렸다가 의미 기반으로
-> 채점하고 보강 피드백을 줍니다. 모듈러 모놀리식 구조에 import-linter로
-> 의존성 방향을 CI에서 강제했고, RAG는 한국어 PDF를 pdfplumber로 추출해
-> BGE-M3로 임베딩하고 ChromaDB에 저장합니다. **포트폴리오 전체가 73개 자동
-> 테스트와 import-linter 5개 contract, ruff/mypy strict로 보호됩니다.**
+> 채점하고 보강 피드백을 줍니다. SQLAlchemy로 모든 답변을 영속화하고
+> 결정론적 약점 분석(Top-3)으로 다음 출제를 가이드하며, Next.js 14 + Architectural-Dark
+> 디자인의 /study + /dashboard 페이지가 전 흐름을 시각화합니다. 모듈러 모놀리식
+> 구조에 import-linter 5개 contract로 의존성 방향을 CI에서 강제했고, **자체 골든셋과
+> 3종 메트릭(Grading Accuracy ±0.15 / Retrieval Recall@5 / Latency p95)으로 회귀를
+> 차단**합니다. 포트폴리오 전체가 **135개 자동 테스트와 ruff/mypy strict, 81개
+> commit**로 보호됩니다.
 
 ---
 
@@ -248,18 +251,115 @@ round-trip 검증** ("정규화", "1NF" 모두 통과).
 
 ## 4. 메트릭 수치 (이력서에 그대로 쓸 수 있는 숫자)
 
-- **Plans 1-3 총 ~45 commits** (GitHub origin/main, 의미 있는 단위 commit 별 push)
-- **백엔드 자동 테스트 73개 (CI green)**, pytest + 4단 피라미드 (Unit, Component, Integration, Eval)
+- **Plans 1-6 총 81 commits** (GitHub origin/main, 의미 있는 단위 commit 별 push)
+- **백엔드 자동 테스트 135개 (CI green)**, pytest 4단 피라미드 (Unit, Component, Integration, Eval)
 - **import-linter contracts 5개 모두 통과** (CI에서 자동 강제)
 - **ruff (E, F, I, B, UP, SIM, RET, PL, PT) + mypy strict + import-linter** 통합
   품질 게이트 — 코드에 `# type: ignore` 0개 (단 1곳 정당화된 `[arg-type]` 예외)
-- **백엔드 LOC: 약 1,650** (app + tests, agents 도메인 763 + rag 도메인 681 +
-  api/core ~200)
-- **프론트엔드 LOC: 약 200** (Next.js scaffold + /health page, Plan 4부터 본격)
 - **Grader 출력 strict JSON + 1-retry + 0.5 fallback** — 세션이 단일 LLM
   실패로 죽지 않음
 - **LangGraph `interrupt_before`로 HITL** — 학습자 답변 입력 동안 그래프 정지,
   SqliteSaver로 프로세스 재시작 후 resume
+- **SQLAlchemy 2.0 + Alembic** — 4 테이블(User/StudySession/QuestionInstance/Answer) + 결정론적 약점 Top-3 (≥3 samples)
+- **Eval harness** — 3 메트릭 + Jinja2 HTML 리포트 + history.csv 시계열 + typer CLI(mock/run/show-latest) + workflow_dispatch
+- **Architectural-Dark 디자인** — Fraunces italic + JetBrains Mono + Pretendard, 깊은 navy + cyan + amber, 일반 AI slop(Inter/Roboto/보라) 회피
+
+---
+
+## 4-B. Plans 4-6 추가 의사결정 + 트러블슈팅
+
+### Q9. 왜 modular monolith에서 api → rag 직접 의존을 막았나요?
+
+**답변**:
+> import-linter contract 1이 "api may only depend on agents/learning/eval/core
+> (forbidden: rag)" 입니다. 처음엔 `api.dependencies`가 retriever를 직접 build
+> 했는데, 이건 도메인 경계를 흐리게 만들었어요. 해결책은 **`agents.wiring`
+> 헬퍼**를 두고 agents 도메인이 자신의 RAG 의존성을 캡슐화하게 한 것. api는
+> `agents.wiring.build_default_graph()` 하나만 호출합니다. import-linter는
+> lazy import도 transitive하게 추적하기 때문에 `# noqa: PLC0415`도 우회
+> 불가능 — 정직한 architecture가 강제됐어요. agents → rag 같은 의도된 transit은
+> `ignore_imports`로 명시했고요.
+
+### Q10. /dashboard의 약점 Top-3는 어떻게 결정론적으로 산정하나요?
+
+**답변**:
+> `compute_weakness`가 결정론적입니다. (1) 한 주제당 ≥3개 답변 데이터가 있어야
+> 후보, (2) 가중평균 점수 ASC 정렬, (3) tie-break은 topic id ASC, (4) Top-3
+> 절단. 즉 같은 입력엔 항상 같은 출력. 비결정 LLM 호출 없음.
+> `frozen=True` dataclass(TopicWeakness)로 immutability까지 강제했고요. 면접에선
+> "AI 시스템에도 결정론이 필요한 부분이 있다 — 추천이라 UX가 흔들리면 사용자가
+> 혼란"이라고 답합니다.
+
+### Q11. Frontend 디자인 차별화는 어떻게 했나요?
+
+**답변**:
+> AI 포트폴리오의 80%가 Inter/Roboto + 보라 그라데이션 + 둥근 카드입니다. 저는
+> 디자인 ADR(`docs/design-explorations/DECISION.md`)에서 의도적으로 그걸 피하기로
+> 결정했어요. v2 Architectural-Dark는 **Fraunces variable italic** 디스플레이 +
+> **JetBrains Mono** meta + **Pretendard** 본문 + 깊은 navy(#0b0e15) +
+> cyan(#7fe2ec) + amber(#f3bd6f) 액센트. 한자 사용도 피해서 한국어 가독성 우선.
+> "디자인은 의사결정의 결과물"이라 ADR로 보존했습니다.
+
+### Q12. 채점 시스템은 어떻게 검증하나요? 끝없이 LLM이라 못 믿겠다는 의견엔?
+
+**답변**:
+> Plan 6 eval harness가 그 질문의 답입니다. 50문항 × 3답변(excellent/acceptable/wrong)
+> 골든셋 위에 **Grading Accuracy = |AI score − human score| ≤ 0.15** 메트릭을
+> 산정합니다. 시드는 5문항(정규화/SQL/TCP/OOP/디자인패턴)으로 시작했고, mock
+> CLI로 매 PR 회귀 차단, manual workflow_dispatch로 real eval. EvalReport에
+> `passes_targets()` 메서드 — 80%/75%/8s 임계 통과해야 True. HTML 리포트와
+> CI exit code가 같은 source 사용. 즉 **"믿어달라" 대신 "측정해서 보여드린다"**.
+
+### T-9. SQLAlchemy `autoflush=False` + 다음 seq 충돌
+
+- **현상**: Plan 5 Task 2에서 `_next_seq`가 같은 session의 pending insert를 못
+  보고 같은 번호 발급 → unique constraint violation.
+- **대응**: `self.session.flush()` 호출로 pending을 DB에 반영 후 query. autoflush
+  비활성 환경에서의 사이드이펙트.
+- **포트폴리오용 1줄**: "SQLAlchemy autoflush=False의 pending state 사각지대를
+  flush()로 해결. ORM은 명시적 동기화 책임을 개발자에게 위임함을 학습."
+
+### T-10. `next lint`의 `react/jsx-no-comment-textnodes`
+
+- **현상**: Plan 4에서 JSX 안에 `// answer.input` 같은 텍스트 노드 (주석으로
+  오인) 작성 시 ESLint 실패.
+- **대응**: `{"// answer.input"}` 형태로 명시적 string 리터럴 wrapping.
+- **포트폴리오용 1줄**: "Next.js의 lint rule이 JSX 텍스트 노드의 주석 패턴까지
+  잡음. 의도된 텍스트는 명시적 string literal wrapping으로."
+
+### T-11. mypy strict + test fixture untyped def
+
+- **현상**: `tests/learning/test_models.py`의 fixture `def session(tmp_path: Path):`
+  mypy strict가 missing return type 에러. `pyproject.toml`의 `tests.*` override가
+  새 하위 패키지에도 적용되지만 명시 권장.
+- **대응**: `from collections.abc import Iterator` + `Iterator[Session]` 명시.
+  4 test 함수 `-> None` 추가.
+- **포트폴리오용 1줄**: "mypy strict 환경에서 새 test 패키지는 override가 적용
+  되더라도 fixture는 explicit annotation이 readability + IDE hint 측면에서 유리."
+
+### T-12. Long-running subagent의 progress reporting truncation
+
+- **현상**: Plan 6 Task 3, Task 7 dispatch가 작업 완료 후 final commit/push 보고
+  단계에서 종료. Controller가 작업 실패로 오인 가능.
+- **대응**: Subagent 보고 truncation을 받았을 때 controller가 `git status` +
+  파일 verify로 실제 상태 확인 후 commit/push만 마무리. 작업 자체는 보존됨.
+- **포트폴리오용 1줄**: "Agent orchestration의 progress reporting은 신뢰할 수
+  없을 수 있음. State machine은 보고가 아니라 git 같은 외부 상태로 진실 확인."
+
+---
+
+## 5-B. Plans 4-6 차별화 포인트 추가
+
+6. **결정론 + 비결정론을 분리** — LLM 노드(Sonnet/Haiku)는 비결정, weakness 분석은
+   결정론적(가중평균 ASC). 추천 UX가 흔들리지 않게 의도적 분리.
+7. **import-linter contract을 신뢰**, lazy import 우회 시도 거부 — `agents.wiring`
+   같은 캡슐화 헬퍼로 정직한 architecture 강제.
+8. **자체 eval harness** — "동작한다"를 데이터로 입증. 면접에서 "어떻게 검증
+   하나요?" 받으면 HTML 리포트 + history.csv 인용.
+9. **mock + real 2-tier eval** — CI는 매 PR mock(무료, 회귀 차단), workflow_dispatch는
+   real(유료, 품질 측정). 비용 의식 + 자동화 양립.
+10. **디자인 ADR** — design-explorations/DECISION.md에서 v1 editorial vs v2
+    Architectural-Dark 비교 + 결정 근거 보존. 디자인이 의사결정의 결과물임을 명시.
 
 ---
 
@@ -306,6 +406,9 @@ Plan 1-3 완성, 4-7 순서로 진행. 단계별로 동작 가능한 결과물�
 | `2026-05-30-plan1-foundation.md` | Plan 1 회고 — 메트릭, Docker 제거 의사결정, 디자인 방향 결정, T-1~T-5 |
 | `2026-05-30-plan2-rag.md` | Plan 2 — RAG 파이프라인, BGE-M3, ChromaDB, T-6~T-8 |
 | `2026-06-01-plan3-langgraph.md` | Plan 3 — LangGraph, 3 agents, Grader 보안 패치 (T-1~T-3) |
+| `2026-06-01-plan4-study-ui.md` | Plan 4 — FastAPI 세션 API + Next.js /study + Architectural-Dark |
+| `2026-06-01-plan5-learning-records.md` | Plan 5 — SQLAlchemy + 약점 분석 + /dashboard + agents.wiring 캡슐화 (T-9~T-11) |
+| `2026-06-01-plan6-eval-ci.md` | Plan 6 — 골든셋 + 3 메트릭 + Jinja2 HTML + typer CLI + workflow_dispatch (T-12) |
 
 ---
 
