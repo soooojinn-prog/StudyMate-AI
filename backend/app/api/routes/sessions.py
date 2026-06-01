@@ -1,4 +1,5 @@
 """Session lifecycle endpoints."""
+
 from __future__ import annotations
 
 import uuid
@@ -110,3 +111,16 @@ def submit_answer(
     graph.update_state(config, {"user_answer": body.user_answer})
     raw_state = graph.invoke(None, config=config) or {}
     return _state_to_dto(raw=raw_state, record=record, status_label="graded")
+
+
+@router.get("/{session_id}", response_model=SessionStateDTO)
+def get_session(session_id: str, graph: GraphDep, store: SessionStoreDep) -> SessionStateDTO:
+    record = store.get(session_id)
+    if record is None:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="session_not_found")
+    config = {"configurable": {"thread_id": session_id}}
+    snapshot = graph.get_state(config) if graph is not None else None
+    raw_state = dict(snapshot.values) if snapshot is not None else {}
+    has_score = raw_state.get("score") is not None
+    label = "graded" if has_score else "awaiting_answer"
+    return _state_to_dto(raw=raw_state, record=record, status_label=label)
