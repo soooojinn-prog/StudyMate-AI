@@ -36,6 +36,10 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(health.router)
+
+    from app.api.routes import sessions  # noqa: PLC0415 (local import to avoid circular dep)
+
+    app.include_router(sessions.router)
     return app
 
 
