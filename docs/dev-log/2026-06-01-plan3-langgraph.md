@@ -1,7 +1,7 @@
 # Plan 3 — LangGraph Workflow & 3 Agents (진행 중)
 
 - **기간**: 2026-06-01 ~ (진행 중)
-- **상태**: 10 tasks 중 0 완료
+- **상태**: 10 tasks **전부 완료** ✅ (+ 보안 패치 + format cleanup)
 - **결과물 (예정)**: `app.agents.run_session(user_id, ...)` + `app.agents.resume_session(thread_id, user_answer)` 공개 API. Coordinator → QuestionGenerator → AWAIT (interrupt) → Grader → Persist 그래프 + SqliteSaver checkpointer로 세션 일시정지/재개 지원.
 
 ---
@@ -30,6 +30,10 @@
 | Task 6 완료 | 69 | 270 (+ langgraph-checkpoint-sqlite 3.1.0, aiosqlite, sqlite-vec) | 416 (+ checkpointer.py 23) | SqliteSaver factory + 자동 parent dir 생성 + 3 tests |
 | Task 7 완료 | 71 | 270 | 532 (+ graph.py 116) | StateGraph 토폴로지 + interrupt_before=["await_answer"] + run_session/resume_session 공개 API + 2 구조 tests |
 | Task 8 완료 | 73 | 270 | 688 (+ test_run_session_with_mocks.py 156) | **풀 흐름 통합 테스트** — Coordinator→QGen→AWAIT 인터럽트→resume(answer)→Grader→Persist 검증 + SqliteSaver 영속성(프로세스 재시작 시뮬레이션)까지 2 tests |
+| Task 9 완료 | 73 | 270 | 696 (+ __init__.py +8) | 공개 API 재수출 — `run_session`, `resume_session`, `build_graph`, `make_checkpointer`, `SessionState`, `RubricItem`, `QuestionPayload`, `GradingResult`. import-linter **5 kept 0 broken** 유지 |
+| Task 9.5 (cleanup) | 73 | 270 | 같음 (포맷팅만) | Plan 3 Tasks 1-8 누적 ruff format drift 17 files 일괄 정리 |
+| Task 10 완료 | 73 (pytest CI에선 제외) | 270 | 763 (+ agent_smoke.py 67) | 수동 smoke CLI — `uv run python -m scripts.agent_smoke run`으로 Coordinator→QGen→AWAIT→prompt→Grader→Persist 풀 사이클 실행 (ANTHROPIC_API_KEY 필요) |
+| **Plan 3 최종** | **73 pytest + 3 PATH-deps + 1 CLI smoke** | **270** | **763 lines (agents 도메인)** | **10 tasks + 1 보안패치 + 1 cleanup = 13 commits, GitHub origin/main 동기화 완료** |
 
 ### 누적 commits (Plan 3)
 
@@ -44,6 +48,10 @@
 | 6 | `2b943b7 feat(agents): add SqliteSaver checkpointer factory` |
 | 7 | `55d72f4 feat(agents): wire LangGraph topology with await_answer interrupt` |
 | 8 | `dd3dc41 test(agents): full graph run + interrupt + resume + checkpointer persistence` |
+| dev-log | `c607b37 docs(dev-log): record Plan 3 Tasks 5-8 metrics + Grader security patch` |
+| 9 | `aabeebc feat(agents): export public surface (run_session, resume_session, SessionState)` |
+| 9.5 | `f51ef7b style(agents): apply ruff format across Plan 3 tasks 1-8` |
+| 10 | `c407aad feat(agents): add manual smoke harness for real Anthropic + RAG` |
 
 ---
 
